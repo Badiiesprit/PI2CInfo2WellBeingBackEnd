@@ -1,10 +1,14 @@
 const mongoose = require("mongoose");
-const professeurSchema = new mongoose.Schema({
-    fullname: String,
-    email: String,
-    telephone: Number
+const commentSchema = new mongoose.Schema({
+    
+    comment: String,
+    like:Number,
+    dislike:Number,
+    post:String,
+    disable:Boolean,
+
 },{
     timestamps: true
 });
-const professeur = mongoose.model("professeur", professeurSchema);
-module.exports = professeur;
+const comment = mongoose.model("post", commentSchema);
+module.exports = comment;

@@ -1,10 +1,14 @@
 const mongoose = require("mongoose");
-const professeurSchema = new mongoose.Schema({
-    fullname: String,
-    email: String,
-    telephone: Number
+const postSchema = new mongoose.Schema({
+    
+    title: String,
+    short_description:String,
+    description: String,
+    image:String,
+    
+
 },{
     timestamps: true
 });
-const professeur = mongoose.model("professeur", professeurSchema);
-module.exports = professeur;
+const post = mongoose.model("post", postSchema);
+module.exports = post;

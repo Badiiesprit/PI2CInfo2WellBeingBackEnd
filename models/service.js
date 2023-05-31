@@ -1,10 +1,16 @@
 const mongoose = require("mongoose");
-const professeurSchema = new mongoose.Schema({
-    fullname: String,
-    email: String,
-    telephone: Number
+const { boolean } = require("yup");
+const serviceSchema = new mongoose.Schema({
+    
+    title: String,
+    description: String,
+    image:String,
+    disable:Boolean,
+    type:String,
+    location:String,
+
 },{
     timestamps: true
 });
-const professeur = mongoose.model("professeur", professeurSchema);
-module.exports = professeur;
+const service = mongoose.model("service", serviceSchema);
+module.exports = service;

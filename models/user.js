@@ -1,10 +1,18 @@
 const mongoose = require("mongoose");
-const professeurSchema = new mongoose.Schema({
-    fullname: String,
-    email: String,
-    telephone: Number
+const { array } = require("yup");
+const userSchema = new mongoose.Schema({
+    
+    firstname: String,
+    lastname: String,
+    phone: String,
+    email:String,
+    password:String,
+    user_image:String,
+    role:Array,
+    disable:Boolean,
+
 },{
     timestamps: true
 });
-const professeur = mongoose.model("professeur", professeurSchema);
-module.exports = professeur;
+const user = mongoose.model("user", userSchema);
+module.exports = user;

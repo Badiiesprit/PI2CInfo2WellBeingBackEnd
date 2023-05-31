@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
-const professeurSchema = new mongoose.Schema({
-    fullname: String,
-    email: String,
-    telephone: Number
+const { boolean } = require("yup");
+const imageSchema = new mongoose.Schema ({
+    
+    path:String,
+
 },{
     timestamps: true
 });
-const professeur = mongoose.model("professeur", professeurSchema);
-module.exports = professeur;
+const image = mongoose.model("image", imageSchema);
+module.exports = image;

@@ -1,5 +1,5 @@
 const express = require("express");
-const professeurModel = require("../models/professeur");
+const professeurModel = require("../models/post");
 const validate = require("../middlewares/validate");
 const router = express.Router();
 
