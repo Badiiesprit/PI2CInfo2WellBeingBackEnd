@@ -2,19 +2,47 @@ const mongoose = require("mongoose");
 const { boolean } = require("yup");
 const centerSchema = new mongoose.Schema ({
     
-    title:String,
-    description:String,
-    image:String,
-    disable:Boolean,
-    type:String,
-    longitude:String,
-    altitude:String,
-    location:String,
-    phone:Number,
-    email:String,
-    category:Array,
-
-
+    title:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    description:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    image:[{type : mongoose.Types.ObjectId, ref :"image"}],
+    longitude:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    altitude:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    location:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    phone:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    email:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    category:[{type : mongoose.Types.ObjectId, ref :"category"}],
+    disable:{
+        type:Boolean,
+        default:false
+    }
 },{
     timestamps: true
 });

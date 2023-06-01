@@ -2,11 +2,29 @@ const mongoose = require("mongoose");
 const { boolean } = require("yup");
 const categorySchema = new mongoose.Schema ({
     
-    title:String,
-    description:String,
-    image:String,
-    disable:Boolean,
-    parent:String,
+    title:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    description:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    image:[{
+        type : mongoose.Types.ObjectId, 
+        ref :"image"
+    }],
+    parent:{
+        type:mongoose.Schema.Types.ObjectId,
+        required:true,
+        ref:'category'
+    },
+    disable:{
+        type:Boolean,
+        default:false
+    }
 
 },{
     timestamps: true
