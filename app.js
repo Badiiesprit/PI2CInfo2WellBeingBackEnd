@@ -9,6 +9,7 @@ var indexRouter = require("./routes/index");
 const categoryRouter = require("./routes/category");
 const offerRouter = require("./routes/offer");
 const centerRouter = require("./routes/center");
+const userRouter = require("./routes/user");
 
 const serviceRouter = require("./routes/service");
 
@@ -38,6 +39,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/category", categoryRouter);
 app.use("/center", centerRouter);
+app.use("/user", userRouter);
 app.use("/services", serviceRouter);
 app.use("/offers", offerRouter);
 
