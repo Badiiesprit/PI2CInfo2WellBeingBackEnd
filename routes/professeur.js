@@ -9,11 +9,8 @@ router.get("/addProfesseur", (req, res, next) => {
   } catch (error) {
     res.render("error", { message: error.message, error });
   }
-});
-router.post(
-  "/addProfesseur",
-  validate,
-  async (req, res, next) => {
+}); 
+router.post("/addProfesseur",validate,async (req, res, next) => {
     try {
       const { fullname, email, telephone } = req.body;
       const checkIfProfesseurExist = await professeurModel.findOne({ email });
