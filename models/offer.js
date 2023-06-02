@@ -2,11 +2,14 @@ const mongoose = require("mongoose");
 const { boolean } = require("yup");
 const offerSchema = new mongoose.Schema({
     
-    title: String,
+    name: String,
     description: String,
     image:String,
     disable:Boolean,
-    center:String,
+    center:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'center'
+    }
 
 },{
     timestamps: true

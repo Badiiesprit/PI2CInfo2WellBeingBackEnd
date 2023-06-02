@@ -2,12 +2,13 @@ const mongoose = require("mongoose");
 const { boolean } = require("yup");
 const serviceSchema = new mongoose.Schema({
     
-    title: String,
+    name: String,
     description: String,
     image:String,
-    disable:Boolean,
-    type:String,
+    phone:Number,
+    email:String,
     location:String,
+    disable:Boolean,
 
 },{
     timestamps: true

@@ -7,11 +7,15 @@ const http = require("http");
 const mongoose = require("mongoose");
 var indexRouter = require("./routes/index");
 const categoryRouter = require("./routes/category");
+const offerRouter = require("./routes/offer");
 const centerRouter = require("./routes/center");
+
+const serviceRouter = require("./routes/service");
+
 var app = express();
 mongoose.set('strictQuery', true);
 mongoose
-  .connect("mongodb://localhost:27017/TuniVita", {
+  .connect("mongodb://127.0.0.1:27017/TuniVita", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -34,6 +38,9 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/category", categoryRouter);
 app.use("/center", centerRouter);
+app.use("/services", serviceRouter);
+app.use("/offers", offerRouter);
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   console.log("Error 404");
