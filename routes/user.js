@@ -23,7 +23,7 @@ router.post("/addUser",validateUser, async (req, res, next) => {
     const { firstname, lastname, phone, email, password} =req.body;
 
     const checkIfUserExist = await userModel.findOne({ email });
-    if (checkIfUserExist) {
+    if (!isEmptyObject(checkIfUserExist)) {
       throw new Error("User already exist!");
     }
 
@@ -60,7 +60,7 @@ router.delete("/delete/:id", async (req, res, next) => {
       var user = await userModel.findById(id);
       if(user.email!=email){
         const checkIfUserExist = await userModel.find({ title });
-        if (!(checkIfUserExist)) {
+        if (!isEmptyObject(checkIfUserExist)) {
           throw new Error("user already exist!");
         }
       }
