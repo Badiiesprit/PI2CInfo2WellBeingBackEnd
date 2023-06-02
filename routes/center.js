@@ -33,7 +33,7 @@ router.post(
         } catch (error) {
           throw new Error("Category is not correct!");
         }
-        if(empty(category_center)){
+        if(isEmptyObject(category_center)){
           throw new Error("Category is not correct!");
         }
       }
@@ -85,8 +85,8 @@ router.post("/update/:id", async (req, res, next) => {
     console.log(title);
     if(center.title!=title){
       const checkIfCenterExist = await centerModel.find({ title });
-      console.log(empty(checkIfCenterExist));
-      if (!empty(checkIfCenterExist)) {
+      console.log(isEmptyObject(checkIfCenterExist));
+      if (!isEmptyObject(checkIfCenterExist)) {
         throw new Error("Center already exist!");
       }
     }
@@ -98,7 +98,7 @@ router.post("/update/:id", async (req, res, next) => {
       } catch (error) {
         throw new Error("Category is not correct!");
       }
-      if(empty(category_center)){
+      if(isEmptyObject(category_center)){
         throw new Error("Category is not correct!");
       }
     }
@@ -120,22 +120,3 @@ router.get("/get", async (req, res, next) => {
 
 module.exports = router;
 
-function empty(value) {
-  if (typeof value === 'undefined' || value === null) {
-    return true;
-  }
-
-  if (typeof value === 'string' && value.trim() === '') {
-    return true;
-  }
-
-  if (Array.isArray(value) && value.length === 0) {
-    return true;
-  }
-
-  if (typeof value === 'object' && Object.keys(value).length === 0) {
-    return true;
-  }
-
-  return false;
-}
