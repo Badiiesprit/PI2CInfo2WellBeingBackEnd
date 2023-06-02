@@ -1,12 +1,12 @@
 var express = require("express");
 const userModel = require("../models/user");
 const validateUser = require("../middlewares/validateUser");
-
+const bcrypt = require('bcrypt');
 var router = express.Router();
 
-/* GET home page. */
+
 router.get("/", function (req, res, next) {
-  res.json("welcome to category");
+  res.json("welcome to TuniVita");
 });
 
 router.get("/get", async (req, res, next) => {
@@ -19,20 +19,21 @@ router.get("/get", async (req, res, next) => {
 });
 
 router.post("/addUser",validateUser, async (req, res, next) => {
+    
   try {
     const { firstname, lastname, phone, email, password} =req.body;
-
     const checkIfUserExist = await userModel.findOne({ email });
     if (!isEmptyObject(checkIfUserExist)) {
       throw new Error("User already exist!");
     }
-
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     const user = new userModel({
       firstname: firstname,
       lastname: lastname,
       phone: phone,
       email: email,
-      password: password,
+      password: hashedPassword,
     });
 
     user.save();
