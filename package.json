@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node app.js",
+    "start": "nodemon app.js",
     "dev": "nodemon app.js"
   },
   "dependencies": {
@@ -19,6 +19,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "nodemon": "^2.0.22",
     "kill-port": "^2.0.1"
   }
 }

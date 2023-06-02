@@ -70,8 +70,8 @@ router.post("/update/:id", async (req, res, next) => {
     console.log(title);
     if(category.title!=title){
       const checkIfCategoryExist = await categoryModel.find({ title });
-      console.log(empty(checkIfCategoryExist));
-      if (!empty(checkIfCategoryExist)) {
+      console.log(isEmptyObject(checkIfCategoryExist));
+      if (!isEmptyObject(checkIfCategoryExist)) {
         throw new Error("Category already exist!");
       }
     }
@@ -93,22 +93,3 @@ router.get("/get", async (req, res, next) => {
 
 module.exports = router;
 
-function empty(value) {
-  if (typeof value === 'undefined' || value === null) {
-    return true;
-  }
-
-  if (typeof value === 'string' && value.trim() === '') {
-    return true;
-  }
-
-  if (Array.isArray(value) && value.length === 0) {
-    return true;
-  }
-
-  if (typeof value === 'object' && Object.keys(value).length === 0) {
-    return true;
-  }
-
-  return false;
-}
