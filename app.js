@@ -6,7 +6,8 @@ var logger = require("morgan");
 const http = require("http");
 const mongoose = require("mongoose");
 var indexRouter = require("./routes/index");
-const professeurRouter = require("./routes/professeur");
+const categoryRouter = require("./routes/category");
+const centerRouter = require("./routes/center");
 var app = express();
 mongoose.set('strictQuery', true);
 mongoose
@@ -31,10 +32,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-app.use("/professeur", professeurRouter);
+app.use("/category", categoryRouter);
+app.use("/center", centerRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  next(createError(404));
+  console.log("Error 404");
 });
 
 // error handler

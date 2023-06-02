@@ -12,13 +12,12 @@ const categorySchema = new mongoose.Schema ({
         required:true,
         trim:true
     },
-    image:[{
+    image:{
         type : mongoose.Types.ObjectId, 
         ref :"image"
-    }],
+    },
     parent:{
         type:mongoose.Schema.Types.ObjectId,
-        required:true,
         ref:'category'
     },
     disable:{
