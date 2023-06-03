@@ -1,11 +1,11 @@
 const express = require("express");
 const serviceModel = require("../models/service");
-const validate = require("../middlewares/validate");
+const validate = require("../middlewares/validateService");
 const router = express.Router();
 
 
 
-router.post("/addService",validate, async (req, res, next) => {
+router.post("/add",validate, async (req, res, next) => {
   try {
     const { name, description, image, phone, email, location } = req.body;
 
@@ -29,7 +29,7 @@ router.post("/addService",validate, async (req, res, next) => {
     res.json(error.message);
   }
 });
-router.get("/getById/:id", async (req, res, next) => {
+router.get("/get/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const service = await serviceModel.findById(id);
@@ -48,7 +48,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/deleteService/:id", async (req, res, next) => {
+router.get("/delete/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     await serviceModel.findByIdAndDelete(id);
@@ -58,7 +58,7 @@ router.get("/deleteService/:id", async (req, res, next) => {
   }
 });
 
-router.post("/updateService/:id",validate, async (req, res, next) => {
+router.post("/update/:id",validate, async (req, res, next) => {
   try {
     const { id } = req.params;
     await serviceModel.findByIdAndUpdate(id,req.body);
