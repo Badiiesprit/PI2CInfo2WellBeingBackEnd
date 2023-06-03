@@ -100,6 +100,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+global.secretKey = 'kgnùfdjhnojgnfsjlnfmljkdfsgb66g5fg5fg5fgfgkdg6fg5fg';
 // Global function for uploading and saving image details
 global.uploadAndSaveImage = (req, res, next) => {
 

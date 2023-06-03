@@ -1,6 +1,8 @@
 var express = require('express');
 const centerModel = require("../models/center");
 const categoryModel = require("../models/category");
+const validateToken = require("../middlewares/validateToken");
+const validate = require("../middlewares/validateCenter");
 var router = express.Router();
 
 /* GET home page. */
@@ -8,10 +10,7 @@ router.get('/', function(req, res, next) {
   res.json("welcome to center");
 });
 
-router.post(
-  "/add",
-  async (req, res, next) => {
-    
+router.post("/add", validateToken , validate , async (req, res, next) => {
     try {
       const {title , description , longitude , altitude , location , phone , email , category} = req.body;
       const checkIfCenterExist = await centerModel.findOne({ title });
@@ -55,7 +54,7 @@ router.post(
   }
 );
 
-router.delete("/delete/:id", async (req, res, next) => {
+router.delete("/delete/:id",validateToken, async (req, res, next) => {
   try {
     const { id } = req.params;
     await centerModel.findByIdAndUpdate(id, {disable:true});
@@ -76,7 +75,7 @@ router.get("/get/:id", async (req, res, next) => {
   }
 });
 
-router.post("/update/:id", async (req, res, next) => {
+router.post("/update/:id",validateToken,validate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const { title , category } = req.body;
