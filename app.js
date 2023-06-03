@@ -10,8 +10,10 @@ var indexRouter = require("./routes/index");
 const categoryRouter = require("./routes/category");
 const offerRouter = require("./routes/offer");
 const centerRouter = require("./routes/center");
+const userRouter = require("./routes/user");
 const ImageModel = require("./models/image");
 const serviceRouter = require("./routes/service");
+const loginRouter = require("./routes/login");
 
 var app = express();
 mongoose.set('strictQuery', true);
@@ -39,8 +41,10 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/category", categoryRouter);
 app.use("/center", centerRouter);
+app.use("/user", userRouter);
 app.use("/services", serviceRouter);
 app.use("/offers", offerRouter);
+app.use("/login", loginRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
