@@ -1,24 +1,33 @@
 var express = require('express');
+var router = express.Router();
 const categoryModel = require("../models/category");
 const validateToken = require("../middlewares/validateToken");
 const validate = require("../middlewares/validateCategory");
-var router = express.Router();
+const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.json("welcome to category");
+router.post('/', function(req, res, next) {
+  res.send(req.body);
 });
 
-router.post("/add",validateToken,validate,async (req, res, next) => {
+router.post("/add",async (req, res, next) => {
     try {
-      const {title} = req.body;
-      const checkIfCategoryExist = await categoryModel.findOne({ title });
-      if (checkIfCategoryExist) {
-        throw new Error("Category already exist!");
+      const {title , description , parent} = req.body;
+      console.log("--------------------3--------------------");
+      console.log(req);
+      console.log("----------------------------------------");
+      const categoryData = {
+        title,
+        description
+      };
+  
+      if (parent) {
+        categoryData.parent = parent;
       }
-      const category = new categoryModel(req.body);
-      category.save();
-      res.json({result : category});
+  
+      const category = new categoryModel(categoryData);
+      const savedCategory = await category.save();
+      res.json({result : savedCategory});
     } catch (error) {
       res.json({error : error.message});
     }
@@ -65,11 +74,26 @@ router.post("/update/:id",validateToken,validate, async (req, res, next) => {
 router.get("/get", async (req, res, next) => {
   try {
     const categorys = await categoryModel.find();
-    res.json({result : categorys});
+    res.json({size:categorys.length,result : categorys});
   } catch (error) {
     res.json({error : error.message});
   }
 });
+
+router.get("/search", async (req, res, next) => {
+  try {
+    const { search } = req.body;
+    if (!search ) {
+      categorys = await categoryModel.find();
+    } else {
+      categorys = await categoryModel.find({ title:{$regex:search} });
+    }
+    res.json({size : categorys.length , result : categorys});
+  } catch (error) {
+    res.json({error : error.message});
+  }
+});
+
 
 module.exports = router;
 

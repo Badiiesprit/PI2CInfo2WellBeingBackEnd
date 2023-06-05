@@ -1,18 +1,27 @@
 const yup = require("yup");
 const categoryModel = require("../models/category");
+var express = require('express');
+
+
 const validate = async(req, res, next) => {
    try {
+    console.log("------------------1----------------------");
     console.log(req.body);
+    console.log("----------------------------------------");
     const schema = yup.object().shape({
-        title: yup.string().required(),
-        description: yup.string().required(),
+        title: yup.string().required().min(3),
+        description: yup.string().required().min(100),
     });
-    const { parent} = req.body;
-    if(parent.length>1){
+    const { parent , title } = req.body;
+    if(parent && parent.length>1){
         const checkIfCategoryParentExist = await categoryModel.findById(parent);
-        if (checkIfCategoryParentExist) {
-        throw new Error("Category parent does not exist!");
+        if (isEmptyObject(checkIfCategoryParentExist)) {
+            throw new Error("Category parent does not exist!");
         }
+    }
+    const checkIfCategoryExist = await categoryModel.findOne({ title });
+    if (!isEmptyObject(checkIfCategoryExist)) {
+        throw new Error("Category already exist!");
     }
     await schema.validate(req.body);
     next();

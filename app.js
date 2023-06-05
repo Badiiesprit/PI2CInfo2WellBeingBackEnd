@@ -1,6 +1,5 @@
 var createError = require("http-errors");
 var express = require("express");
-const multer = require('multer');
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
@@ -11,11 +10,17 @@ const categoryRouter = require("./routes/category");
 const offerRouter = require("./routes/offer");
 const centerRouter = require("./routes/center");
 const userRouter = require("./routes/user");
-const ImageModel = require("./models/image");
 const serviceRouter = require("./routes/service");
 const loginRouter = require("./routes/login");
+const { JsonWebTokenError } = require("jsonwebtoken");
+const bodyParser = require("body-parser");
+const cors = require('cors');
+const multer = require('multer');
+const upload = multer();
 
 var app = express();
+app.use(bodyParser.json());
+app.use(cors());
 mongoose.set('strictQuery', true);
 mongoose
   .connect("mongodb://127.0.0.1:27017/TuniVita", {
@@ -37,9 +42,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-
+app.use(upload.array());
 app.use("/", indexRouter);
-app.use("/category", categoryRouter);
+app.use("/category" ,categoryRouter);
 app.use("/center", centerRouter);
 app.use("/user", userRouter);
 app.use("/services", serviceRouter);
@@ -86,54 +91,7 @@ global.isEmptyObject = function(value) {
 
   return false;
 };
-
-// Configure Multer to handle file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Save uploaded files to the "uploads" directory
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix); // Set the filename
-  },
-});
-
-const upload = multer({ storage });
-
+//secretKey JWT Token
 global.secretKey = 'kgnùfdjhnojgnfsjlnfmljkdfsgb66g5fg5fg5fgfgkdg6fg5fg';
-// Global function for uploading and saving image details
-global.uploadAndSaveImage = (req, res, next) => {
 
-  upload.single('image')(req, res, async (err) => {
-
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Something went wrong' });
-    }
-
-    const { filename, originalname } = req.file;
-
-    try {
-      // Create a new document in the Image collection
-      const image = new ImageModel({
-        fieldname,
-        originalname,
-        size,
-        fielddestinationname,
-        filename,
-        mimetype,
-        path
-      });
-
-      // Save the image document to the database
-      await image.save();
-
-      req.imageId = image._id; // Attach the ID of the saved image to the request object
-      next();
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Something went wrong' });
-    }
-  });
-};
 

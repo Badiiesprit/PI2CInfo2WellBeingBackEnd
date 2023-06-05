@@ -49,7 +49,7 @@ router.post("/add", validateToken , validate , async (req, res, next) => {
       center.save();
       res.json(center);
     } catch (error) {
-      res.json(error.message);
+      res.json({error : error.message});
     }
   }
 );
@@ -61,7 +61,7 @@ router.delete("/delete/:id",validateToken, async (req, res, next) => {
     const center = await centerModel.findById(id);
     res.json(center);
   } catch (error) {
-    res.json(error.message);
+    res.json({error : error.message});
   }
 });
 
@@ -71,7 +71,7 @@ router.get("/get/:id", async (req, res, next) => {
     const center = await centerModel.findById(id);
     res.json(center);
   } catch (error) {
-    res.json(error.message);
+    res.json({error : error.message});
   }
 });
 
@@ -105,7 +105,7 @@ router.post("/update/:id",validateToken,validate, async (req, res, next) => {
     center = await centerModel.findById(id);
     res.json(center);
   } catch (error) {
-    res.json(error.message);
+    res.json({error : error.message});
   }
 });
 router.get("/get", async (req, res, next) => {
@@ -113,7 +113,20 @@ router.get("/get", async (req, res, next) => {
     const centers = await centerModel.find();
     res.json(centers);
   } catch (error) {
-    res.json(error.message);
+    res.json({error : error.message});
+  }
+});
+router.get("/search", async (req, res, next) => {
+  try {
+    const { search } = req.body;
+    if (!search) {
+      centers = await centerModel.find();
+    } else {
+      centers = await centerModel.find({ title:{$regex:search} });
+    }
+    res.json({result : centers});
+  } catch (error) {
+    res.json({error : error.message});
   }
 });
 
