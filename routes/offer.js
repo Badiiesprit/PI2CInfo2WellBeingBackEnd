@@ -98,4 +98,61 @@ router.post("/search", async (req, res, next) => {
   }
 });
 
+
+router.post("/searchFilters", async (req, res, next) => {
+  try {
+    const { name, description, location,center} = req.body;
+    let offers = [];
+    if (!offers) {
+      offers = await offerModel.find();
+    } else {
+      const query = {};
+      if (name) {
+        query.name = { $regex: name, $options: "i" };
+      }
+      if (description) {
+        query.description = { $regex: description, $options: "i" };
+      }
+      if (location) {
+        query.location = { $regex: location, $options: "i" };
+      }
+      const checkIfCenterExist = await centerModel.findOne({ center });
+      if (checkIfCenterExist) {
+        query.center = { $regex: center, $options: "i" };
+      }
+     
+      offers = await offerModel.find(query).sort({ createdAt: -1 });
+    }
+    res.json({ offers });
+  } catch (error) {
+    res.json(error.message);
+  }
+});
+
+router.post("/sort", async (req, res, next) => {
+  try {
+    const { field, order } = req.body;
+
+    let sortValue;
+    if (order === "asc") {
+      sortValue = 1; 
+    } else {
+      sortValue = -1; 
+    }
+    console.log(field,order);
+    console.log(field.name);
+    const sortOptions = {};
+    sortOptions[field] = sortValue;
+
+    const offers = await offerModel
+    .find()
+    .collation({ caseLevel:true,locale:"en_US" })
+    .sort(sortOptions).limit(5);    
+    
+    res.json({ offers });
+  } catch (error) {
+    res.json(error.message);
+  }
+});
+
 module.exports = router;
