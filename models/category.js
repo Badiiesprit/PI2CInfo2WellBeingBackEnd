@@ -19,7 +19,6 @@ const categorySchema = new mongoose.Schema ({
     parent:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'category',
-        default:0
     },
     disable:{
         type:Boolean,

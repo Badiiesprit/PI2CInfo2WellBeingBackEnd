@@ -3,7 +3,7 @@ const imageSchema = new mongoose.Schema ({
     fieldname:String,
     originalname:String,
     size:String,
-    fielddestinationname:String,
+    destination:String,
     filename:String,
     mimetype:String,
     path:String,
