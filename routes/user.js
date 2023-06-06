@@ -1,7 +1,9 @@
 var express = require("express");
 const userModel = require("../models/user");
 const validateUser = require("../middlewares/validateUser");
+const validateToken = require("../middlewares/validateToken");
 const bcrypt = require('bcrypt');
+const user = require("../models/user");
 var router = express.Router();
 
 
@@ -9,10 +11,10 @@ router.get("/", function (req, res, next) {
   res.json("welcome to TuniVita");
 });
 
-router.get("/get", async (req, res, next) => {
+router.get("/get", validateToken ,async (req, res, next) => {
   try {
-    const users = await userModel.find();
-    res.json(users);
+      const users = await userModel.find();
+      res.json(users);
   } catch (error) {
     res.json(error.message);
   }
@@ -34,6 +36,7 @@ router.post("/addUser",validateUser, async (req, res, next) => {
       phone: phone,
       email: email,
       password: hashedPassword,
+      role:req.body.role,
     });
 
     user.save();
@@ -43,7 +46,7 @@ router.post("/addUser",validateUser, async (req, res, next) => {
   }
 });
 
-router.delete("/delete/:id", async (req, res, next) => {
+router.delete("/delete/:id",validateToken, async (req, res, next) => {
     try {
       const { id } = req.params;
       await userModel.findByIdAndUpdate(id, {disable:true});
@@ -54,18 +57,22 @@ router.delete("/delete/:id", async (req, res, next) => {
     }
   });
 
-  router.post("/update/:id", async (req, res, next) => {
+  router.post("/update/:id",validateToken, async (req, res, next) => {
     try {
       const { id } = req.params;
       const { email } = req.body;
       var user = await userModel.findById(id);
       if(user.email!=email){
-        const checkIfUserExist = await userModel.find({ title });
+        const checkIfUserExist = await userModel.find({ email });
         if (!isEmptyObject(checkIfUserExist)) {
           throw new Error("user already exist!");
         }
       }
       await userModel.findByIdAndUpdate(id, req.body);
+      if (!(user.role.includes("admin"))) {
+        await userModel.findByIdAndUpdate(id,{role:["user"]});
+      }
+      
       user = await userModel.findById(id);
       res.json(user);
     } catch (error) {

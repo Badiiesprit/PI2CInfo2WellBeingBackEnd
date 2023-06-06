@@ -4,29 +4,30 @@ const jwt = require('jsonwebtoken');
 var router = express.Router();
 const bcrypt = require('bcrypt');
 
-router.post("/", async (req, res, next)=>{
-    const { password , email } =req.body;
-    console.log(email);
-    console.log(password);
+router.post("/", async (req, res, next) => {
+    const { password, email } = req.body;
     try {
-        const user = await userModel.findOne({ email });
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (passwordMatch) {
-            const payload = {
-                userId: user._id, // Include any necessary user data in the payload
-            };
-            const options = {
-                expiresIn: '10h', // Set the expiration time of the token
-            };
-            const token = jwt.sign(payload, secretKey, options);
-            res.json({token:token});
-        } else {
-            
-            res.json("Invalid Password");
-        }
+      const user = await userModel.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ error: "l'email n'existe pas!" });
+      }
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (passwordMatch) {
+        const payload = {
+          userId: user._id,
+          role: user.role, 
+        };
+        const options = {
+          expiresIn: '10h', 
+        };
+        const token = jwt.sign(payload, secretKey, options);
+        return res.json({ token });
+      } else {
+        return res.status(401).json({ error: "mot de passe invalide" });
+      }
     } catch (error) {
-        res.json("email does not exist!");
+      return res.status(500).json({ error: "erreur lors de la connexion" });
     }
-});
+  });
 
 module.exports=router;
