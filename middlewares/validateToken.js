@@ -19,6 +19,7 @@ const validateToken = async (req, res, next) => {
         const user = await userModel.findById(userId);
         if (user && user.id == userId) {
           console.log('User verification:', user.id);
+          req.body.currentUser=user.id;
           return next();
         }
 

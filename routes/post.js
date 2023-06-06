@@ -1,5 +1,8 @@
 var express = require('express');
 const postModel = require("../models/post");
+const validateToken = require("../middlewares/validateToken");
+const userModel = require("../models/user");
+
 
 var router = express.Router();
 
@@ -100,15 +103,20 @@ router.post("/search", async (req, res, next) => {
 
 
 
-router.post('/like/:id', async (req, res) => {
+router.post('/like/:id',validateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.body.userId;
+    const userId = req.body.currentUser;
+    
 
-    const post = await Post.findById(id);
+    const post = await postModel.findById(id);
 
     if (post.likedBy.includes(userId)) {
       throw new Error('Vous avez déjà liké cette publication');
+    }
+    if (post.dislikedBy.includes(userId)) {
+      post.dislikedBy.pull(userId);
+      post.dislikes -= 1;
     }
 
     post.likedBy.push(userId);
@@ -120,6 +128,33 @@ router.post('/like/:id', async (req, res) => {
     res.json({ error: error.message });
   }
 });
+
+router.post('/dislike/:id',validateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.body.currentUser;
+    
+
+    const post = await postModel.findById(id);
+
+    if (post.dislikedBy.includes(userId)) {
+      throw new Error('Vous avez déjà disliké cette publication');
+    }
+    if (post.likedBy.includes(userId)) {
+      post.likedBy.pull(userId);
+      post.likes -= 1;
+    }
+
+    post.dislikedBy.push(userId);
+    post.dislikes += 1;
+    await post.save();
+
+    res.json({ message: 'Publication dislikée avec succès' });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
 
 
 module.exports = router;
