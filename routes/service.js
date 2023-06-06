@@ -1,13 +1,13 @@
 const express = require("express");
 const serviceModel = require("../models/service");
-const validate = require("../middlewares/validate");
+const validate = require("../middlewares/validateService");
 const router = express.Router();
 
 
 
-router.post("/addService",validate, async (req, res, next) => {
+router.post("/add",validate, async (req, res, next) => {
   try {
-    const { name, description, image, phone, email, location } = req.body;
+    const { name, description, image, phone, email, location,date } = req.body;
 
     const checkIfOfferExist = await serviceModel.findOne({ name });
     if (checkIfOfferExist) {
@@ -21,6 +21,7 @@ router.post("/addService",validate, async (req, res, next) => {
       image: image,
       phone: phone,
       email: email,
+      date:date,
     });
 
     service.save();
@@ -29,7 +30,8 @@ router.post("/addService",validate, async (req, res, next) => {
     res.json(error.message);
   }
 });
-router.get("/getById/:id", async (req, res, next) => {
+
+router.get("/get/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const service = await serviceModel.findById(id);
@@ -48,7 +50,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/deleteService/:id", async (req, res, next) => {
+router.get("/delete/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     await serviceModel.findByIdAndDelete(id);
@@ -58,7 +60,7 @@ router.get("/deleteService/:id", async (req, res, next) => {
   }
 });
 
-router.post("/updateService/:id",validate, async (req, res, next) => {
+router.post("/update/:id",validate, async (req, res, next) => {
   try {
     const { id } = req.params;
     await serviceModel.findByIdAndUpdate(id,req.body);
@@ -82,6 +84,80 @@ router.post("/search", async (req, res, next) => {
     res.json({ services });
   } catch (error) {
     res.json(error.message);
+  }
+});
+
+router.post("/searchFilters", async (req, res, next) => {
+  try {
+    const { name, description, location,date } = req.body;
+    let services = [];
+    if (!services) {
+      services = await serviceModel.find();
+    } else {
+      const query = {};
+      if (name) {
+        query.name = { $regex: name, $options: "i" };
+      }
+      if (description) {
+        query.description = { $regex: description, $options: "i" };
+      }
+      if (location) {
+        query.location = { $regex: location, $options: "i" };
+      }
+      if (date) {
+        const parsedDate = new Date(date);
+        query.date = { $eq: parsedDate };  
+      }
+      services = await serviceModel.find(query).sort({ createdAt: -1 });
+    }
+    res.json({ services });
+  } catch (error) {
+    res.json(error.message);
+  }
+});
+
+router.post("/sort", async (req, res, next) => {
+  try {
+    const { field, order } = req.body;
+
+    let sortValue;
+    if (order === "asc") {
+      sortValue = 1; 
+    } else {
+      sortValue = -1; 
+    }
+    console.log(field,order);
+    const sortOptions = {};
+    sortOptions[field] = sortValue;
+
+    const services = await serviceModel
+    .find()
+    .collation({ caseLevel:true,locale:"en_US" })
+    .sort(sortOptions).limit(5);    
+    
+    res.json({ services });
+  } catch (error) {
+    res.json(error.message);
+  }
+});
+
+router.get("/page", async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1; // Current page (default: 1)
+    const pageSize = parseInt(req.query.pageSize) || 10; // Page size (default: 10)
+
+    const totalServices = await serviceModel.countDocuments();
+    const totalPages = Math.ceil(totalServices / pageSize);
+
+    const services = await serviceModel
+      .find()
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .exec();
+
+    res.json({ services, totalPages, currentPage: page });
+  } catch (error) {
+    res.json({ error: error.message });
   }
 });
 

@@ -1,11 +1,43 @@
 const mongoose = require("mongoose");
 const postSchema = new mongoose.Schema({
-    
-    title: String,
-    short_description:String,
-    description: String,
-    image:String,
-    
+
+
+    title:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    short_description:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    description:{
+        type:String,
+        required:true,
+        trim:true
+    },
+
+    image:[{
+        type : mongoose.Types.ObjectId, 
+        ref :"image"
+    }],
+    likes: {
+        type: Number,
+        default: 0
+      },
+      likedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }],
+      dislikes: {
+        type: Number,
+        default: 0
+      },
+      dislikedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }]     
 
 },{
     timestamps: true

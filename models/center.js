@@ -40,6 +40,10 @@ const centerSchema = new mongoose.Schema ({
         type : mongoose.Types.ObjectId, 
         ref :"category"
     }],
+    nbVus:{
+        type:Number,
+        default:0
+    },
     disable:{
         type:Boolean,
         default:false
