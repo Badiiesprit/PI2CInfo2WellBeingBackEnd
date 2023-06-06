@@ -5,9 +5,6 @@ var express = require('express');
 
 const validate = async(req, res, next) => {
    try {
-    console.log("------------------1----------------------");
-    console.log(req.body);
-    console.log("----------------------------------------");
     const schema = yup.object().shape({
         title: yup.string().required().min(3),
         description: yup.string().required().min(100),

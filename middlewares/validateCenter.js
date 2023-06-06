@@ -9,7 +9,7 @@ const validate = async(req, res, next) => {
         longitude:yup.number().min(100),
         altitude:yup.number().min(100),
         phone:yup.number().min(10000000).max(99999999),
-        location: yup.string().required().min(10),
+        location: yup.string().min(10),
         email:yup.string().email()
     });
     const { category } = req.body;
