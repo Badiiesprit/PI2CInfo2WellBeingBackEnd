@@ -97,11 +97,9 @@ router.post("/search", async (req, res, next) => {
     res.json(error.message);
   }
 });
-
-
 router.post("/searchFilters", async (req, res, next) => {
   try {
-    const { name, description, location,center} = req.body;
+    const { name, description, location } = req.body;
     let offers = [];
     if (!offers) {
       offers = await offerModel.find();
@@ -115,10 +113,6 @@ router.post("/searchFilters", async (req, res, next) => {
       }
       if (location) {
         query.location = { $regex: location, $options: "i" };
-      }
-      const checkIfCenterExist = await centerModel.findOne({ center });
-      if (checkIfCenterExist) {
-        query.center = { $regex: center, $options: "i" };
       }
      
       offers = await offerModel.find(query).sort({ createdAt: -1 });
@@ -140,7 +134,6 @@ router.post("/sort", async (req, res, next) => {
       sortValue = -1; 
     }
     console.log(field,order);
-    console.log(field.name);
     const sortOptions = {};
     sortOptions[field] = sortValue;
 
@@ -152,6 +145,27 @@ router.post("/sort", async (req, res, next) => {
     res.json({ offers });
   } catch (error) {
     res.json(error.message);
+  }
+});
+
+
+router.get("/page", async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1; // Current page (default: 1)
+    const pageSize = parseInt(req.query.pageSize) || 10; // Page size (default: 10)
+
+    const totalOffers = await offerModel.countDocuments();
+    const totalPages = Math.ceil(totalOffers / pageSize);
+
+    const offers = await offerModel
+      .find()
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .exec();
+
+    res.json({ offers, totalPages, currentPage: page });
+  } catch (error) {
+    res.json({ error: error.message });
   }
 });
 

@@ -141,4 +141,24 @@ router.post("/sort", async (req, res, next) => {
   }
 });
 
+router.get("/page", async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1; // Current page (default: 1)
+    const pageSize = parseInt(req.query.pageSize) || 10; // Page size (default: 10)
+
+    const totalServices = await serviceModel.countDocuments();
+    const totalPages = Math.ceil(totalServices / pageSize);
+
+    const services = await serviceModel
+      .find()
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .exec();
+
+    res.json({ services, totalPages, currentPage: page });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
 module.exports = router;
