@@ -16,6 +16,8 @@ const serviceRouter = require("./routes/service");
 const loginRouter = require("./routes/login");
 const forgotPasswordEmailRouter = require("./routes/forgotPasswordEmail");
 const forgotPasswordSmsRouter = require("./routes/forgotPasswordSms");
+const postRouter = require("./routes/post");
+const commentRouter = require("./routes/comment");
 
 var app = express();
 mongoose.set('strictQuery', true);
@@ -50,6 +52,9 @@ app.use("/login", loginRouter);
 app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
 
+
+app.use("/posts",postRouter);
+app.use("/comments",commentRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   console.log("Error 404");
