@@ -20,6 +20,7 @@ const validateToken = async (req, res, next) => {
         if (user && user.id == userId && user.tokens.includes(token)) {
 
           console.log('User verification:', user.id);
+          req.body.currentUser=user.id;
           return next();
         }
 
