@@ -51,9 +51,9 @@ router.post('/', async (req, res, next) => {
     // Send the email
     await transporter.sendMail(mailOptions);
 
-    return res.json({ message: "Validation code sent to your email" });
+    return res.json({ message: "Le code de validation est envoyé par email" });
   } catch (error) {
-    return res.status(500).json({ error: "Error sending validation code" });
+    return res.status(500).json({ error: "Erreur lors de l'envoi du code de validation" });
   }
 });
 
@@ -62,19 +62,18 @@ router.post('/verify', async (req, res, next) => {
   try {
     const user = await userModel.findOne({ email });
     if (!user || !user.resetToken || user.resetToken !== validationCode || !user.resetTokenExpiration || user.resetTokenExpiration < Date.now()) {
-      return res.status(400).json({ error: "Invalid or expired validation code" });
+      return res.status(400).json({ error: "le code de validation est expiré ou invalide" });
     }
 
-    // Reset token is valid, proceed with password update
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.resetToken = undefined;
     user.resetTokenExpiration = undefined;
     await user.save();
 
-    return res.status(200).json({ message: "Password reset successfully" });
+    return res.status(200).json({ message: "le mot de passe est mis à jour" });
   } catch (error) {
-    return res.status(500).json({ error: "Error resetting password" });
+    return res.status(500).json({ error: "Erreur de modification du mot de passe" });
   }
 });
 

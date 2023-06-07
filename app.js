@@ -1,5 +1,7 @@
 var createError = require("http-errors");
 var express = require("express");
+const session = require('express-session'); // Add this line
+const passport = require('passport'); // Add this line
 const multer = require('multer');
 var path = require("path");
 var cookieParser = require("cookie-parser");
@@ -16,6 +18,8 @@ const serviceRouter = require("./routes/service");
 const loginRouter = require("./routes/login");
 const forgotPasswordEmailRouter = require("./routes/forgotPasswordEmail");
 const forgotPasswordSmsRouter = require("./routes/forgotPasswordSms");
+const loginFacebookRouter = require("./routes/loginFacebook");
+const logoutRouter = require ("./routes/logout");
 
 var app = express();
 mongoose.set('strictQuery', true);
@@ -40,6 +44,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+// Set up session middleware
+app.use(session({
+  secret: 'your_session_secret',
+  resave: false,
+  saveUninitialized: true
+}));
+
+// Set up passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+add
 app.use("/", indexRouter);
 app.use("/category", categoryRouter);
 app.use("/center", centerRouter);
@@ -47,8 +62,10 @@ app.use("/user", userRouter);
 app.use("/services", serviceRouter);
 app.use("/offers", offerRouter);
 app.use("/login", loginRouter);
-app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
-app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
+app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
+app.use("/forgotPasswordSms", forgotPasswordSmsRouter);
+app.use("/loginFacebook", loginFacebookRouter);
+app.use("/logout", logoutRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -71,7 +88,7 @@ server.listen(5050, () => {
   console.log("app is running on port 5050");
 });
 
-global.isEmptyObject = function(value) {
+global.isEmptyObject = function (value) {
   if (typeof value === 'undefined' || value === null) {
     return true;
   }
@@ -140,4 +157,3 @@ global.uploadAndSaveImage = (req, res, next) => {
     }
   });
 };
-

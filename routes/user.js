@@ -4,6 +4,7 @@ const validateUser = require("../middlewares/validateUser");
 const validateToken = require("../middlewares/validateToken");
 const bcrypt = require('bcrypt');
 const user = require("../models/user");
+
 var router = express.Router();
 
 
@@ -61,6 +62,7 @@ router.delete("/delete/:id",validateToken, async (req, res, next) => {
     try {
       const { id } = req.params;
       const { email } = req.body;
+      console.log(req.body);
       var user = await userModel.findById(id);
       if(user.email!=email){
         const checkIfUserExist = await userModel.find({ email });
@@ -74,11 +76,13 @@ router.delete("/delete/:id",validateToken, async (req, res, next) => {
       }
       
       user = await userModel.findById(id);
+      console.log(user);
       res.json(user);
     } catch (error) {
       res.json(error.message);
     }
   });
 
+  
 
 module.exports = router;
