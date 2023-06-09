@@ -88,18 +88,11 @@ app.use("/user", userRouter);
 app.use("/services", serviceRouter);
 app.use("/offers", offerRouter);
 app.use("/login", loginRouter);
-<<<<<<< HEAD
-app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
-app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
 app.use("/image",imageRouter);
-=======
 app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms", forgotPasswordSmsRouter);
 app.use("/loginFacebook", loginFacebookRouter);
 app.use("/logout", logoutRouter)
-
-
->>>>>>> e44b838407b2c700f21775fffccfed85ded8b64e
 app.use("/posts",postRouter);
 app.use("/comments",commentRouter);
 app.use(express.static(path.join(__dirname, "public")));
