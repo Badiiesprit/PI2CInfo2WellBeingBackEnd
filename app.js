@@ -20,7 +20,6 @@ const logoutRouter = require ("./routes/logout");
 const postRouter = require("./routes/post");
 const commentRouter = require("./routes/comment");
 const cors = require("cors");
-const multer = require("multer");
 const fileUpload = require("express-fileupload");
 const requestIp = require('request-ip');
 const swaggerJsdoc = require('swagger-jsdoc');
@@ -80,7 +79,6 @@ app.use(session({
 // Set up passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
-add
 app.use("/", indexRouter);
 app.use("/category", filesUploads , categoryRouter);
 app.use("/center", filesUploads , centerRouter);
@@ -88,18 +86,13 @@ app.use("/user", userRouter);
 app.use("/services", serviceRouter);
 app.use("/offers", offerRouter);
 app.use("/login", loginRouter);
-<<<<<<< HEAD
 app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
 app.use("/image",imageRouter);
-=======
 app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms", forgotPasswordSmsRouter);
 app.use("/loginFacebook", loginFacebookRouter);
 app.use("/logout", logoutRouter)
-
-
->>>>>>> e44b838407b2c700f21775fffccfed85ded8b64e
 app.use("/posts",postRouter);
 app.use("/comments",commentRouter);
 app.use(express.static(path.join(__dirname, "public")));
