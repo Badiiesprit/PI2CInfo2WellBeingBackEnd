@@ -1,14 +1,18 @@
 const express = require("express");
 const centerModel = require("../models/center");
 const offerModel = require("../models/offer");
+const userModel = require("../models/user");
+
 const validate = require("../middlewares/validateOffer");
 const router = express.Router();
+const validateToken = require("../middlewares/validateToken");
+const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
+const { google } = require('googleapis');
 
 
-
-router.post("/add",validate, async (req, res, next) => {
+router.post("/add",validateToken,validate,uploadAndSaveImage, async (req, res, next) => {
   try {
-    const { name, description,location, image, center } = req.body;
+    const { name, description,location, center } = req.body;
     console.log(req.body);
     const checkIfOfferExist = await offerModel.findOne({ name });
     if (checkIfOfferExist) {
@@ -20,21 +24,27 @@ router.post("/add",validate, async (req, res, next) => {
       throw new Error("Center does not exist!");
     }
     console.log(checkIfCenterExist);
-    const offer = new offerModel({
+    const offerData = {
       name: name,
       description: description,
       location: location,
-      image:image,
       center: checkIfCenterExist,
       
-    });
+    };
 
-    offer.save();
-    res.json("Offer Added");
+    if (req.body.imageIds) {
+      offerData.image = req.body.imageIds[0];
+    }
+    const offer = new offerModel(offerData);
+    const savedOffer = await offer.save();
+    res.json({ result: savedOffer });
   } catch (error) {
     res.json(error.message);
   }
 });
+
+
+
 
 router.get("/get/:id", async (req, res, next) => {
   try {
@@ -46,6 +56,9 @@ router.get("/get/:id", async (req, res, next) => {
   }
 });
 
+
+
+
 router.get("/", async (req, res, next) => {
   try {
     const offers = await offerModel.find();
@@ -54,6 +67,18 @@ router.get("/", async (req, res, next) => {
     res.json(error.message);
   }
 });
+
+
+
+router.get("/enabled-offers", async (req, res, next) => {
+  try {
+    const offers = await offerModel.find({disable:false});
+    res.json({ offers });
+  } catch (error) {
+    res.json(error.message);
+  }
+});
+
 
 router.get("/delete/:id", async (req, res, next) => {
   try {
@@ -65,6 +90,7 @@ router.get("/delete/:id", async (req, res, next) => {
   }
 });
 
+
 router.post("/update/:id",validate, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -73,9 +99,20 @@ router.post("/update/:id",validate, async (req, res, next) => {
     if (!checkIfCenterExist) {
       throw new Error("Center does not exist!");
     }
+    const offerData = {
+      name: name,
+      description: description,
+      location: location,
+      center: checkIfCenterExist,
+      
+    };
     
-    await offerModel.findByIdAndUpdate(id,req.body);
-    res.json("offer updated");
+    if (req.body.imageIds) {
+      offerData.image = req.body.imageIds[0];
+    }
+    await offerModel.findByIdAndUpdate(id,offerData);
+    const offerView = await offerModel.findById(id);
+    res.json({ offerView });
 
   } catch (error) {
     res.json(error.message);
@@ -88,9 +125,9 @@ router.post("/search", async (req, res, next) => {
     console.log(search);
     let offers = [];
     if (!offers) {
-      offers = await offerModel.find();
+      offers = await offerModel.find({ disable: false });
     } else {
-      offers = await offerModel.find({ name:{$regex:search} });
+      offers = await offerModel.find({disable:false , name:{$regex:search} });
     }
     res.json({ offers });
   } catch (error) {
@@ -102,7 +139,7 @@ router.post("/searchFilters", async (req, res, next) => {
     const { name, description, location } = req.body;
     let offers = [];
     if (!offers) {
-      offers = await offerModel.find();
+      offers = await offerModel.find({ disable: false });
     } else {
       const query = {};
       if (name) {
@@ -138,7 +175,7 @@ router.post("/sort", async (req, res, next) => {
     sortOptions[field] = sortValue;
 
     const offers = await offerModel
-    .find()
+    .find({ disable: false })
     .collation({ caseLevel:true,locale:"en_US" })
     .sort(sortOptions).limit(5);    
     
@@ -168,5 +205,194 @@ router.get("/page", async (req, res, next) => {
     res.json({ error: error.message });
   }
 });
+
+router.post("/click/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const offer = await offerModel.findById(id);
+    if (!offer) {
+      throw new Error("Offer not found!");
+    }
+
+    offer.clickCount += 1;
+    await offer.save();
+
+    res.json({ message:"Offer click recorded successfully.",clickCount:offer.clickCount });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+
+router.get("/enable-disable/:id", async (req, res) => {
+  const offerId = req.params.id;
+  
+  try {
+    const offer = await offerModel.findById(offerId);
+    if (offer) {
+      offer.disable = !offer.disable;
+      await offer.save();
+      res.json({ message: "Disable field :", disable:offer.disable });
+    } else {
+      res.json({ error: "Offer not found" });
+    }
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+
+
+const mixpanel = require('mixpanel');
+const mixpanelClient = mixpanel.init('92ef7d9216b1f454fc03c733a9da5459');
+
+router.get("/statistics", async (req, res) => {
+  try {
+    
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentDay = currentDate.getDate();
+    console.log(currentDate, currentYear, currentMonth, currentDay);
+
+    const statistics = await offerModel.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(`${currentYear}-${currentMonth}-01`),
+            $lte: new Date(`${currentYear}-${currentMonth}-${currentDay}`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$disable",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const enabledOffers = statistics.find(stat => stat._id === false);
+    const disabledOffers = statistics.find(stat => stat._id === true);
+
+    const enabledCount = enabledOffers ? enabledOffers.count : 0;
+    const disabledCount = disabledOffers ? disabledOffers.count : 0;
+
+    const totalOffers = enabledCount + disabledCount;
+    const percentageEnabledOffers = ((enabledCount / totalOffers) * 100).toFixed(2) + '%';
+    const percentageDisabledOffers = ((disabledCount / totalOffers) * 100).toFixed(2) + '%';
+
+    // Track the statistics event in Mixpanel
+    mixpanelClient.track('Offer Statistics', {
+      PercentageEnabledOffers: percentageEnabledOffers,
+      PercentageDisabledOffers: percentageDisabledOffers,
+      enqbleOffers:enabledCount,
+      disableOffers:disabledCount,
+      totalOffers:totalOffers
+    });
+
+    const result = {
+      PercentageEnabledOffers: percentageEnabledOffers,
+      PercentageDisabledOffers: percentageDisabledOffers,
+      enqbleOffers:enabledCount,
+      disableOffers:disabledCount,
+      totalOffers:totalOffers
+    };
+
+    res.json(result);
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+
+router.get('/offers-by-center', async (req, res) => {
+  try {
+      const offers = await offerModel.find();
+      offers.forEach((offer) => {
+        mixpanelClient.track('Offer Viewed',
+         { 
+          offerId: offer._id, 
+          centerId: offer.center, 
+          clickCount:offer.clickCount,
+          createdAt:offer.createdAt,
+          disable:offer.disable
+          
+        });
+        console.log(offer.center);
+        console.log(offer.disable);
+      });
+   
+      res.json("done");
+    } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// router.post("/rate/:id", async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { userId, rating } = req.body;
+//     const offer = await offerModel.findById(id);
+//     if (!offer) {
+//       throw new Error("Offer not found!");
+//     }
+//     const userIndex = offer.ratedBy.findById(userId);
+
+//     if (userIndex !== -1) {
+//       offer.ratedBy[userIndex].rating = rating;
+//     } else {
+//       offer.ratedBy.push(userId);
+//     }
+
+//     // Calculate the average rating
+//     const totalRatings = offer.ratedBy.length;
+//     const sum = offer.ratedBy.reduce((total, ratedUserId) => {
+
+//       const user = userModel.findById(ratedUserId);
+//       return total + user.rating;
+//     }, 0);
+//     const averageRating = sum / totalRatings;
+//     offer.averageRating = averageRating;
+//     await offer.save();
+
+//     res.json({ message: "Rating added/updated successfully.", averageRating });
+//   } catch (error) {
+//     res.json({ error: error.message });
+//   }
+// });
+
+
+router.post('/rate/:id', validateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.body.currentUser;
+    const { rating } = req.body;
+    const offer = await offerModel.findById(id);
+
+    const userIndex = offer.ratedBy.findIndex((ratedUser) => ratedUser.userId.toString() === userId);
+
+    if (userIndex > -1) {
+      offer.ratedBy[userIndex].rating = rating;
+    } else {
+      offer.ratedBy.push({ userId, rating });
+    }
+
+    const totalRatings = offer.ratedBy.length;
+    const sum = offer.ratedBy.reduce((total, ratedUser) => total + ratedUser.rating, 0);
+    const averageRating = sum / totalRatings;
+
+    offer.averageRating = averageRating;
+    await offer.save();
+
+    res.json({ message: 'Rating added/updated successfully.', averageRating,ratedBy:offer.ratedBy });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+
 
 module.exports = router;

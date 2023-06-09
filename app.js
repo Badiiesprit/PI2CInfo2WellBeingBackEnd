@@ -45,8 +45,8 @@ app.use("/", indexRouter);
 app.use("/category", filesUploads , categoryRouter);
 app.use("/center", filesUploads , centerRouter);
 app.use("/user", userRouter);
-app.use("/services", serviceRouter);
-app.use("/offers", offerRouter);
+app.use("/services", filesUploads,serviceRouter);
+app.use("/offers", filesUploads,offerRouter);
 app.use("/login", loginRouter);
 app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
@@ -90,3 +90,4 @@ global.isEmptyObject = function (value) {
 };
 //secretKey JWT Token
 global.secretKey = "kgnùfdjhnojgnfsjlnfmljkdfsgb66g5fg5fg5fgfgkdg6fg5fg";
+

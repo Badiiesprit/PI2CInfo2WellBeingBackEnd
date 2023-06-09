@@ -1,31 +1,36 @@
 const express = require("express");
 const serviceModel = require("../models/service");
 const validate = require("../middlewares/validateService");
+const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
 const router = express.Router();
+const validateToken = require("../middlewares/validateToken");
 
 
-
-router.post("/add",validate, async (req, res, next) => {
+router.post("/add",validate,validateToken,uploadAndSaveImage, async (req, res, next) => {
   try {
-    const { name, description, image, phone, email, location,date } = req.body;
+    const { name, description, phone, email, location,date } = req.body;
 
     const checkIfOfferExist = await serviceModel.findOne({ name });
     if (checkIfOfferExist) {
       throw new Error("Service already exist!");
     }
 
-    const service = new serviceModel({
-      name: name,
-      description: description,
-      location: location,
-      image: image,
-      phone: phone,
-      email: email,
-      date:date,
-    });
+    const serviceData ={
+      name,
+      description,
+      location,
+      phone,
+      email,
+      date,
+    };
 
-    service.save();
-    res.json("Service Added");
+    if (req.body.imageIds) {
+      serviceData.image = req.body.imageIds[0];
+    }
+    const service = new serviceModel(serviceData);
+    const savedService = await service.save();
+    res.json({ result: savedService });
+    
   } catch (error) {
     res.json(error.message);
   }
@@ -60,14 +65,33 @@ router.get("/delete/:id", async (req, res, next) => {
   }
 });
 
-router.post("/update/:id",validate, async (req, res, next) => {
+router.post("/update/:id",validateToken,validate,uploadAndSaveImage, async (req, res, next) => {
   try {
     const { id } = req.params;
-    await serviceModel.findByIdAndUpdate(id,req.body);
-    const service = await serviceModel.findById(id);
-    res.json({ service });
+    const { name, description, phone, email, location,date } = req.body;
+
+    const checkIfOfferExist = await serviceModel.findOne({ name });
+    if (checkIfOfferExist) {
+      throw new Error("Service already exist!");
+    }
+
+    const serviceData ={
+      name,
+      description,
+      location,
+      phone,
+      email,
+      date,
+    };
+    if (req.body.imageIds) {
+      serviceData.image = req.body.imageIds[0];
+    }
+    await serviceModel.findByIdAndUpdate(id,serviceData);
+    const serviceView = await serviceModel.findById(id);
+    res.json({ serviceView });
   } catch (error) {
     res.json(error.message);
+    
   }
 });
 

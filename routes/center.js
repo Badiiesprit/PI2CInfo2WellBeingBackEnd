@@ -11,7 +11,7 @@ router.get('/', function(req, res, next) {
   res.json("welcome to center");
 });
 
-router.post("/add", validateToken , validate , uploadAndSaveImage , async (req, res, next) => {
+router.post("/add" , validate , uploadAndSaveImage , async (req, res, next) => {
     try {
       const {title , description , longitude , altitude , location , phone , email , category} = req.body;
       const checkIfCenterExist = await centerModel.findOne({ title });

@@ -10,7 +10,7 @@ router.post("/", function (req, res, next) {
   res.send(req.body);
 });
 
-router.post("/add",validateToken,validate,uploadAndSaveImage, async (req, res, next) => {
+router.post("/add",validate,uploadAndSaveImage, async (req, res, next) => {
   try {
     const { title, description, parent } = req.body;
     const categoryData = {
