@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { boolean } = require("yup");
+
 const categorySchema = new mongoose.Schema ({
     
     title:{
@@ -17,7 +17,7 @@ const categorySchema = new mongoose.Schema ({
         ref :"image"
     },
     parent:{
-        type:mongoose.Schema.Types.ObjectId,
+        type : mongoose.Types.ObjectId,
         ref:'category',
     },
     disable:{

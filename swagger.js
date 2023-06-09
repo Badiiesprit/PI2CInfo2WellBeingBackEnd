@@ -1,8 +1,8 @@
 const express = require('express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const swaggerAutogen = require('swagger-autogen')();
 
-const app = express();
 
 // Swagger configuration options
 const options = {
@@ -24,7 +24,9 @@ const options = {
 
 const specs = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-
+swaggerAutogen(outputFile, endpointsFiles, doc).then(() => {
+  require('./swagger-output.json'); // Spécifiez ici le chemin vers votre fichier de sortie Swagger généré
+});
 // Start your server
 app.listen(3000, () => {
   console.log('Server is running on port 3000');

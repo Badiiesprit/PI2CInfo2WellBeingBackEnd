@@ -1,8 +1,5 @@
-var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
 const http = require("http");
 const mongoose = require("mongoose");
 var indexRouter = require("./routes/index");
@@ -10,6 +7,7 @@ const categoryRouter = require("./routes/category");
 const offerRouter = require("./routes/offer");
 const centerRouter = require("./routes/center");
 const userRouter = require("./routes/user");
+const imageRouter = require("./routes/image");
 const serviceRouter = require("./routes/service");
 const loginRouter = require("./routes/login");
 const forgotPasswordEmailRouter = require("./routes/forgotPasswordEmail");
@@ -19,11 +17,37 @@ const commentRouter = require("./routes/comment");
 const cors = require("cors");
 const multer = require("multer");
 const fileUpload = require("express-fileupload");
+const requestIp = require('request-ip');
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const swaggerAutogen = require('swagger-autogen')();
+var router = express.Router();
+var app = express();
+app.use(cors());
+// Swagger configuration options
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Your API',
+      version: '1.0.0',
+      description: 'API documentation using Swagger',
+    },
+    servers: [
+      {
+        url: 'http://localhost:5050', // Update with your server's URL
+      },
+    ],
+  },
+  apis: ['./routes/*.js'], // Specify the path to your API routes
+};
+
+const specs = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 const upload = multer();
 
-var app = express();
-// app.use(bodyParser.json());
-app.use(cors());
+
 mongoose.set('strictQuery', true);
 mongoose.connect("mongodb://127.0.0.1:27017/TuniVita", {
     useNewUrlParser: true,
@@ -50,8 +74,7 @@ app.use("/offers", offerRouter);
 app.use("/login", loginRouter);
 app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
-
-
+app.use("/image",imageRouter);
 app.use("/posts",postRouter);
 app.use("/comments",commentRouter);
 app.use(express.static(path.join(__dirname, "public")));
@@ -90,3 +113,11 @@ global.isEmptyObject = function (value) {
 };
 //secretKey JWT Token
 global.secretKey = "kgnùfdjhnojgnfsjlnfmljkdfsgb66g5fg5fg5fgfgkdg6fg5fg";
+
+global.getImageFilePathById = (image) => {
+  if (!image) {
+    return null;
+  }
+  const imagePath = path.join(__dirname, 'uplods', image.filename);
+  return imagePath;
+}
