@@ -6,13 +6,13 @@ const router = express.Router();
 
 // Set up Nexmo client
 const vonage = new Vonage({
-    apiKey: "fad33ea5",
-    apiSecret: "Rgms2nmE3uzVxE24"
+    apiKey: "ac13b29b",
+    apiSecret: "Z7QrnNXzjdedILxl"
   })
 
 // Route for sending a verification code to the user's phone number
 router.post('/', async (req, res) => {
-    const from = "Vonage APIs"
+    const from = "TuniVita"
     const to = "21628046402"
     const text = 'A text message sent using the Vonage SMS API'
     

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { token } = require("morgan");
 const { array } = require("yup");
 const userSchema = new mongoose.Schema({
     
@@ -14,7 +15,7 @@ const userSchema = new mongoose.Schema({
     },
     phone:{
         type:String,
-        required:true,
+        required:false,
         trim:true
     },  
     email:{
@@ -24,7 +25,7 @@ const userSchema = new mongoose.Schema({
     },
     password:{
         type:String,
-        required:true,
+        required:false,
         trim:true
     },
 
@@ -39,6 +40,11 @@ const userSchema = new mongoose.Schema({
     disable:{
         type: Boolean,
         default:false
+    },
+    tokens:{
+        type: [String],
+        trim: true
+        
     }
 },{
     timestamps: true

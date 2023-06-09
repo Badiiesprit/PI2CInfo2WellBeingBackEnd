@@ -1,4 +1,7 @@
 var express = require("express");
+const session = require('express-session'); // Add this line
+const passport = require('passport'); // Add this line
+const multer = require('multer');
 var path = require("path");
 const http = require("http");
 const mongoose = require("mongoose");
@@ -12,6 +15,8 @@ const serviceRouter = require("./routes/service");
 const loginRouter = require("./routes/login");
 const forgotPasswordEmailRouter = require("./routes/forgotPasswordEmail");
 const forgotPasswordSmsRouter = require("./routes/forgotPasswordSms");
+const loginFacebookRouter = require("./routes/loginFacebook");
+const logoutRouter = require ("./routes/logout");
 const postRouter = require("./routes/post");
 const commentRouter = require("./routes/comment");
 const cors = require("cors");
@@ -65,6 +70,17 @@ app.use(express.urlencoded({ extended: true }));
 const filesUploads = fileUpload({ safeFileNames: true, preserveExtension: true });
 
 
+// Set up session middleware
+app.use(session({
+  secret: 'your_session_secret',
+  resave: false,
+  saveUninitialized: true
+}));
+
+// Set up passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+add
 app.use("/", indexRouter);
 app.use("/category", filesUploads , categoryRouter);
 app.use("/center", filesUploads , centerRouter);
@@ -72,9 +88,18 @@ app.use("/user", userRouter);
 app.use("/services", serviceRouter);
 app.use("/offers", offerRouter);
 app.use("/login", loginRouter);
+<<<<<<< HEAD
 app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
 app.use("/image",imageRouter);
+=======
+app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
+app.use("/forgotPasswordSms", forgotPasswordSmsRouter);
+app.use("/loginFacebook", loginFacebookRouter);
+app.use("/logout", logoutRouter)
+
+
+>>>>>>> e44b838407b2c700f21775fffccfed85ded8b64e
 app.use("/posts",postRouter);
 app.use("/comments",commentRouter);
 app.use(express.static(path.join(__dirname, "public")));
@@ -93,7 +118,7 @@ server.listen(5050, () => {
 });
 
 global.isEmptyObject = function (value) {
-  if (typeof value === "undefined" || value === null) {
+  if (typeof value === 'undefined' || value === null) {
     return true;
   }
 

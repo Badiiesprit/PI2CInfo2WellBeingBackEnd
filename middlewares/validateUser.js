@@ -8,7 +8,7 @@ const validateUser = async(req, res, next) => {
     lastname: yup.string().required(),
     phone: yup.number().min(10000000).max(99999999),
     email:yup.string().email(),
-    password:yup.string().required(),
+    password:yup.string(),
 
     });
     await schema.validate(req.body);
