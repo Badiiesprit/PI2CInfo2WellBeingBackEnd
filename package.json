@@ -7,6 +7,7 @@
     "dev": "nodemon app.js"
   },
   "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.3.31",
     "@vonage/server-sdk": "^3.5.1",
     "axios": "^1.4.0",
     "bcrypt": "^5.1.0",
@@ -31,12 +32,9 @@
     "passport": "^0.6.0",
     "passport-facebook": "^3.0.0",
     "path": "^0.12.7",
-<<<<<<< HEAD
     "qrcode": "^1.5.3",
     "request-ip": "^3.3.0",
     "swagger-autogen": "^2.23.1",
-=======
->>>>>>> parent of fe91808 (service clicked/stat)
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3",
     "twig": "~0.10.3",

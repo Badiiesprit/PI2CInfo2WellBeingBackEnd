@@ -20,7 +20,6 @@ const logoutRouter = require ("./routes/logout");
 const postRouter = require("./routes/post");
 const commentRouter = require("./routes/comment");
 const cors = require("cors");
-const multer = require("multer");
 const fileUpload = require("express-fileupload");
 const requestIp = require('request-ip');
 const swaggerJsdoc = require('swagger-jsdoc');
