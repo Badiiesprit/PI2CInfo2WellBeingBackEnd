@@ -1,14 +1,19 @@
 var express = require("express");
 var router = express.Router();
 const categoryModel = require("../models/category");
+const imageModel = require("../models/image");
 const validateToken = require("../middlewares/validateToken");
 const validate = require("../middlewares/validateCategory");
 const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
+const fs = require('fs');
 
-/* GET home page. */
-router.post("/", function (req, res, next) {
-  res.send(req.body);
-});
+/**
+ * @swagger
+ * tags:
+ *   name: Category
+ *   description: API pour les opérations liées aux catégories
+ */
+
 
 router.post("/add",validate,uploadAndSaveImage, async (req, res, next) => {
   try {
@@ -31,6 +36,7 @@ router.post("/add",validate,uploadAndSaveImage, async (req, res, next) => {
   }
 });
 
+
 router.post("/update/:id", validateToken, validate,uploadAndSaveImage, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -41,28 +47,50 @@ router.post("/update/:id", validateToken, validate,uploadAndSaveImage, async (re
     };
     if (parent) {
       categoryData.parent = parent;
+    }else{
+      categoryData.parent = null;
     }
     if (req.body.imageIds) {
-      categoryData.image = req.body.imageIds[0];
-    }
-    
-    var category = await categoryModel.findById(id);
-    if (category.title != title) {
-      const checkIfCategoryExist = await categoryModel.find({ title });
-      if (!isEmptyObject(checkIfCategoryExist)) {
-        throw new Error("Category already exist!");
+      console.error(req.body.imageIds);
+      if(categoryData.image){
+        let image = await imageModel.findById(categoryData.image);
+        if(image){
+          let pathImage = getImageFilePathById(image);
+          console.log(pathImage);
+          fs.unlink(pathImage, (error) => {
+            if (error) {
+              console.error('Error while deleting image:', error);
+            }
+          });
+          await imageModel.findByIdAndRemove(image._id);
+        }
       }
-    }
-    if (req.body.imageIds) {
       categoryData.image = req.body.imageIds[0];
     }
-    category = await categoryModel.findByIdAndUpdate(id, req.body);
+    category = await categoryModel.findByIdAndUpdate(id, categoryData);
     res.json({ result: category });
   } catch (error) {
     res.json({ error: error.message });
   }
 });
 
+/**
+ * @swagger
+ * /category/delete/{id}:
+ *   delete:
+ *     summary: Supprime une catégorie existante
+ *     tags: [Category]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID de la catégorie à supprimer
+ *     responses:
+ *       200:
+ *         description: Succès
+ */
 router.delete("/delete/:id", validateToken, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -75,33 +103,106 @@ router.delete("/delete/:id", validateToken, async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /category/get/{id}:
+ *   get:
+ *     summary: Récupère une catégorie par son ID
+ *     tags: [Category]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID de la catégorie à récupérer
+ *     responses:
+ *       200:
+ *         description: Succès
+ */
 router.get("/get/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const category = await categoryModel.findById(id);
+    const category = await categoryModel.findById(id).populate('image').populate('parent');
+    // Get path of Images
+    category.image = await imageModel.findById(category.image);
     res.json({ result: category });
   } catch (error) {
     res.json({ error: error.message });
   }
 });
 
+/**
+ * @swagger
+ * /category/get:
+ *   get:
+ *     summary: Récupère la liste des catégories
+ *     tags: [Category]
+ *     responses:
+ *       200:
+ *         description: Succès
+ */
 router.get("/get", async (req, res, next) => {
   try {
-    const categorys = await categoryModel.find();
+    const categorys = await categoryModel.find().populate('image').populate('parent');
     res.json({ size: categorys.length, result: categorys });
   } catch (error) {
     res.json({ error: error.message });
   }
 });
 
+/**
+ * @swagger
+ * /category/search:
+ *   get:
+ *     summary: Recherche une catégorie par titre ou description
+ *     tags: [Category]
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Mot clé de recherche
+ *     responses:
+ *       200:
+ *         description: Succès
+ */
 router.get("/search", async (req, res, next) => {
   try {
     const { search } = req.body;
     if (!search) {
-      categorys = await categoryModel.find();
+      categorys = await categoryModel.find().populate('image').populate('parent');;
     } else {
-      categorys = await categoryModel.find({ title: { $regex: search } });
+      categorys = await categoryModel.find({ title: { $regex: search } }).populate('image').populate('parent');;
     }
+    res.json({ size: categorys.length, result: categorys });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /category/getbyparent/{parent}:
+ *   get:
+ *     summary: Récupère les catégories par catégorie parente
+ *     tags: [Category]
+ *     parameters:
+ *       - in: path
+ *         name: parent
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID de la catégorie parente
+ *     responses:
+ *       200:
+ *         description: Succès
+ */
+router.get("/getbyparent/:parent", async (req, res, next) => {
+  try {
+    const { parent } = req.params;
+    const categorys = await categoryModel.find({ parent }).populate('image').populate('parent');
     res.json({ size: categorys.length, result: categorys });
   } catch (error) {
     res.json({ error: error.message });
