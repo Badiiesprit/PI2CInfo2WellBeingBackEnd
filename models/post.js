@@ -37,7 +37,23 @@ const postSchema = new mongoose.Schema({
       dislikedBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-      }]     
+      }],
+      ratedBy: [
+        {
+          userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+          },
+          rating: {
+            type: Number,
+            required: true,
+          },
+        },
+      ],
+    averageRating:{
+        type: Number,
+        default: 0,
+    }     
 
 },{
     timestamps: true

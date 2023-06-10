@@ -20,8 +20,18 @@ const cors = require("cors");
 const multer = require("multer");
 const fileUpload = require("express-fileupload");
 const upload = multer();
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
-var app = express();
+
+
+
+
+// app.js
+const app = express();
+
+// ...
+
 // app.use(bodyParser.json());
 app.use(cors());
 mongoose.set('strictQuery', true);
@@ -50,9 +60,10 @@ app.use("/offers", offerRouter);
 app.use("/login", loginRouter);
 app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
+app.use("/pdf", postRouter);
 
 
-app.use("/posts",postRouter);
+app.use("/posts",filesUploads,postRouter);
 app.use("/comments",commentRouter);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(upload.array());
@@ -65,7 +76,7 @@ app.use(function (req, res, next) {
 
 
 const server = http.createServer(app);
-server.listen(5050, () => {
+server.listen(5040, () => {
   console.log("app is running on port 5050");
 });
 
