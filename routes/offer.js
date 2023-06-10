@@ -134,8 +134,6 @@ router.post("/search", async (req, res, next) => {
     res.json(error.message);
   }
 });
-
-
 router.post("/searchFilters", async (req, res, next) => {
   try {
     const { name, description, location } = req.body;
@@ -190,8 +188,8 @@ router.post("/sort", async (req, res, next) => {
 
 router.get("/page", async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1; 
-    const pageSize = parseInt(req.query.pageSize) || 10; 
+    const page = parseInt(req.query.page) || 1; // Current page (default: 1)
+    const pageSize = parseInt(req.query.pageSize) || 10; // Page size (default: 10)
 
     const totalOffers = await offerModel.countDocuments();
     const totalPages = Math.ceil(totalOffers / pageSize);
@@ -207,7 +205,6 @@ router.get("/page", async (req, res, next) => {
     res.json({ error: error.message });
   }
 });
-
 
 router.post("/click/:id", async (req, res, next) => {
   try {
@@ -228,7 +225,6 @@ router.post("/click/:id", async (req, res, next) => {
 });
 
 
-
 router.get("/enable-disable/:id", async (req, res) => {
   const offerId = req.params.id;
   
@@ -237,7 +233,7 @@ router.get("/enable-disable/:id", async (req, res) => {
     if (offer) {
       offer.disable = !offer.disable;
       await offer.save();
-      res.json({ disable:offer.disable });
+      res.json({ message: "Disable field :", disable:offer.disable });
     } else {
       res.json({ error: "Offer not found" });
     }
@@ -250,6 +246,7 @@ router.get("/enable-disable/:id", async (req, res) => {
 
 const mixpanel = require('mixpanel');
 const mixpanelClient = mixpanel.init('92ef7d9216b1f454fc03c733a9da5459');
+
 router.get("/statistics", async (req, res) => {
   try {
     
@@ -286,7 +283,7 @@ router.get("/statistics", async (req, res) => {
     const percentageEnabledOffers = ((enabledCount / totalOffers) * 100).toFixed(2) + '%';
     const percentageDisabledOffers = ((disabledCount / totalOffers) * 100).toFixed(2) + '%';
 
-  
+    // Track the statistics event in Mixpanel
     mixpanelClient.track('Offer Statistics', {
       PercentageEnabledOffers: percentageEnabledOffers,
       PercentageDisabledOffers: percentageDisabledOffers,
@@ -333,6 +330,39 @@ router.get('/offers-by-center', async (req, res) => {
   }
 });
 
+
+// router.post("/rate/:id", async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { userId, rating } = req.body;
+//     const offer = await offerModel.findById(id);
+//     if (!offer) {
+//       throw new Error("Offer not found!");
+//     }
+//     const userIndex = offer.ratedBy.findById(userId);
+
+//     if (userIndex !== -1) {
+//       offer.ratedBy[userIndex].rating = rating;
+//     } else {
+//       offer.ratedBy.push(userId);
+//     }
+
+//     // Calculate the average rating
+//     const totalRatings = offer.ratedBy.length;
+//     const sum = offer.ratedBy.reduce((total, ratedUserId) => {
+
+//       const user = userModel.findById(ratedUserId);
+//       return total + user.rating;
+//     }, 0);
+//     const averageRating = sum / totalRatings;
+//     offer.averageRating = averageRating;
+//     await offer.save();
+
+//     res.json({ message: "Rating added/updated successfully.", averageRating });
+//   } catch (error) {
+//     res.json({ error: error.message });
+//   }
+// });
 
 
 router.post('/rate/:id', validateToken, async (req, res) => {
