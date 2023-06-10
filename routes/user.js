@@ -21,6 +21,24 @@ router.get("/get", validateToken ,async (req, res, next) => {
     res.json(error.message);
   }
 });
+// router.get("/get", validateToken, async (req, res, next) => {
+//   try {
+//     const role = req.user.role;
+//     let users;
+    
+//     if (role === "admin") {
+//       users = await userModel.find();
+//     } else if (role === "user") {
+//       users = await userModel.findById(req.user.id);
+//     } else {
+//       throw new Error("Invalid user role");
+//     }
+
+//     res.json(users);
+//   } catch (error) {
+//     res.json(error.message);
+//   }
+// });
 
 router.post("/addUser",validateUser, async (req, res, next) => {
     
@@ -90,7 +108,7 @@ router.delete("/delete/:id",validateToken, async (req, res, next) => {
     }
   });
 
-  router.get("/statistics", async (req, res, next) => {
+  router.get("/statistics",validateToken, async (req, res, next) => {
     try {
       const countHommes = await userModel.countDocuments({ gender: 'h' });
       const countFemmes = await userModel.countDocuments({ gender: 'f' });
