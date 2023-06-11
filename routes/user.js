@@ -64,7 +64,7 @@ router.post("/addUser",validateUser, async (req, res, next) => {
       email: email,
       password: hashedPassword,
     });
-
+    
     user.save();
     res.json("User Added");
   } catch (error) {
