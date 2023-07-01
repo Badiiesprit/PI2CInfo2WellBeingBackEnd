@@ -26,7 +26,7 @@ const requestIp = require('request-ip');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const swaggerAutogen = require('swagger-autogen')();
-
+const bodyParser = require('body-parser');
 var router = express.Router();
 var app = express();
 app.use(cors());
@@ -81,6 +81,7 @@ app.use(session({
 // Set up passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(bodyParser.json());
 app.use("/", indexRouter);
 app.use("/category", filesUploads , categoryRouter);
 app.use("/center", filesUploads , centerRouter);
@@ -98,6 +99,7 @@ app.use("/loginGmail", loginGmailRouter);
 app.use("/logout", logoutRouter);
 app.use("/posts",postRouter);
 app.use("/comments",commentRouter);
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use(upload.array());
 // catch 404 and forward to error handler

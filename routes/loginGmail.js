@@ -8,8 +8,8 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 // Configuration des identifiants client
 const GOOGLE_CLIENT_ID =
-  "897449572917-v00ttcj9p32c9u8vi3b7u29hj8hk6ar2.apps.googleusercontent.com";
-const GOOGLE_CLIENT_SECRET = "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";
+  "897449572917-tkrgddt2q3vuvnssv1c41jgf66bpggjs.apps.googleusercontent.com";
+const GOOGLE_CLIENT_SECRET = "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";
 
 // Configuration d'Express
 const app = express();
@@ -65,7 +65,7 @@ app.use(passport.session());
 
 // Définition des routes
 router.get("/", (req, res) => {
-  res.render("login.twig");
+  res.render("http://localhost:4200/");
 });
 
 router.get(
@@ -76,7 +76,7 @@ router.get(
 router.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    successRedirect: "/dashboard",
+    successRedirect: "http://localhost:4200/",
     failureRedirect: "/login",
   })
 );
