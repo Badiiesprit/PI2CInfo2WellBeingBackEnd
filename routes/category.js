@@ -18,6 +18,7 @@ const fs = require('fs');
 router.post("/add",validateToken,validate,uploadAndSaveImage, async (req, res, next) => {
   try {
     const { title, description, parent } = req.body;
+
     const categoryData = {
       title,
       description,
@@ -144,7 +145,12 @@ router.get("/get/:id", async (req, res, next) => {
  */
 router.get("/get", async (req, res, next) => {
   try {
-    const categorys = await categoryModel.find().populate('image').populate('parent');
+    const categorys = await categoryModel
+    
+      .find()
+      .sort({disable:1})
+      .populate('image')
+      .populate('parent');
     res.json({ size: categorys.length, result: categorys });
   } catch (error) {
     res.json({ error: error.message });
@@ -170,11 +176,12 @@ router.get("/get", async (req, res, next) => {
  */
 router.get("/search", async (req, res, next) => {
   try {
-    const { search } = req.body;
+    const { search } = req.query;
+    console.log(search);
     if (!search) {
-      categorys = await categoryModel.find().populate('image').populate('parent');;
+      categorys = await categoryModel.find().populate('image').populate('parent');
     } else {
-      categorys = await categoryModel.find({ title: { $regex: search } }).populate('image').populate('parent');;
+      categorys = await categoryModel.find({ title: { $regex: search } }).populate('image').populate('parent');
     }
     res.json({ size: categorys.length, result: categorys });
   } catch (error) {
@@ -202,6 +209,7 @@ router.get("/search", async (req, res, next) => {
 router.get("/getbyparent/:parent", async (req, res, next) => {
   try {
     const { parent } = req.params;
+    if(parent == "null") parent = null;
     const categorys = await categoryModel.find({ parent }).populate('image').populate('parent');
     res.json({ size: categorys.length, result: categorys });
   } catch (error) {

@@ -1,24 +1,17 @@
 var express = require('express');
+const geolib = require('geolib');
+const nodemailer = require('nodemailer');
+const opencage = require('opencage-api-client');
 const centerModel = require("../models/center");
 const categoryModel = require("../models/category");
+const userModel = require('../models/user');
 const validateToken = require("../middlewares/validateToken");
 const validate = require("../middlewares/validateCenter");
 const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
-var router = express.Router();
 const axios = require('axios');
+const user = require('../models/user');
 
-async function getIPInformation(ipAddress) {
-  const apiKey = '6e22eb552a2d686b831d72bed3d22e8f'; // Replace with your actual API key
-  const url = `http://api.ipstack.com/${ipAddress}?access_key=${apiKey}`;
-
-  try {
-    const response = await axios.get(url);
-    return response.data;
-  } catch (error) {
-    throw new Error('Failed to fetch IP information');
-  }
-}
-
+var router = express.Router();
 
 /**
  * @swagger
@@ -27,6 +20,19 @@ async function getIPInformation(ipAddress) {
  *   description: API pour les opérations liées aux centre
  */
 
+// Set up nodemailer transporter for sending emails
+const transporter = nodemailer.createTransport({
+  // service: 'gmail',
+  // auth: {
+  //   user: 'badii.abdelkhalak@esprit.tn', // Your Hotmail.com email address
+  //   pass: '211SMT7823' // Your Hotmail.com password
+  // }
+  service: 'hotmail',
+  auth: {
+    user: 'nassreddine.trigui@hotmail.com', // Your Hotmail.com email address
+    pass: 'Nass..1989' // Your Hotmail.com password
+  }
+});
 
 router.post("/add", validateToken , validate , uploadAndSaveImage , async (req, res, next) => {
     try {
@@ -47,6 +53,13 @@ router.post("/add", validateToken , validate , uploadAndSaveImage , async (req, 
       }
       const center = new centerModel(categoryData);
       center.save();
+      // const users = userModel.find({disable:false});
+      // (await users).forEach(user => {
+      //   setTimeout(() => {
+      //     sundMails(user.email,"Add new Center","Add new Center");
+      //   }, 5000);
+      // }); 
+      
       res.json({ result: center });
     } catch (error) {
       res.json({error : error.message});
@@ -54,7 +67,7 @@ router.post("/add", validateToken , validate , uploadAndSaveImage , async (req, 
   }
 );
 
-router.post("/update/:id",validateToken,validate, async (req, res, next) => {
+router.post("/update/:id",validateToken,validate,uploadAndSaveImage, async (req, res, next) => {
   try {
     const { id } = req.params;
     const {title , description , longitude , altitude , location , phone , email , category} = req.body;
@@ -124,37 +137,7 @@ router.delete("/delete/:id",validateToken, async (req, res, next) => {
   }
 });
 
-/**
- * @swagger
- * /center/getbyip/{ipAddress}:
- *   get:
- *     summary: Récupère un centre par adresse IP
- *     tags: [Center]
- *     parameters:
- *       - in: path
- *         name: ipAddress
- *         schema:
- *           type: string
- *         required: true
- *         description: Adresse IP du centre à récupérer
- *     responses:
- *       200:
- *         description: Succès
- */
-router.get('/getbyip/:ipAddress', async (req, res, next) => {
 
-  //const ipAddress = req.clientIp; // Replace with the IP address you want to look up
-  const {ipAddress} = req.params;
-  console.log(ipAddress);
-  await getIPInformation(ipAddress).then((data) => {
-    console.log(data);
-    res.json({data});
-  }).catch((error) => {
-    console.error(error);
-    res.json({error : error.message});
-  });
-  res.send("welcome to center");
-});
 
 /**
  * @swagger
@@ -189,7 +172,7 @@ router.get("/get/:id", async (req, res, next) => {
 
 /**
  * @swagger
- * /center/get:
+ * /center/getAll:
  *   get:
  *     summary: Récupère la liste des centres
  *     tags: [Center]
@@ -198,51 +181,9 @@ router.get("/get/:id", async (req, res, next) => {
  *         description: Succès
  */
 
-router.get("/get", async (req, res, next) => {
+router.get("/getAll", async (req, res, next) => {
   try {
-    const centers = await centerModel.find().populate('image').populate('category');
-    res.json({ size: centers.length, result: centers });
-  } catch (error) {
-    res.json({error : error.message});
-  }
-});
-
-/**
- * @swagger
- * /center/search:
- *   get:
- *     summary: Recherche un centre par titre ou description
- *     tags: [Center]
- *     parameters:
- *       - in: query
- *         name: keyword
- *         schema:
- *           type: string
- *         required: true
- *         description: Mot clé de recherche
- *     responses:
- *       200:
- *         description: Succès
- */
-
-router.get("/search", async (req, res, next) => {
-  try {
-    const { search } = req.body;
-    console.log(search);
-    if (!search) {
-      centers = await centerModel.find().populate('image').populate('category');
-    } else {
-      const searchQuery = {
-        $or: [
-          { title: { $regex: search, $options: "i" } },
-          { description: { $regex: search, $options: "i" } },
-          { location: { $regex: search, $options: "i" } },
-          { phone: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-        ]
-      };
-      centers = await centerModel.find(searchQuery).populate('image').populate('category');
-    }
+    const centers = await centerModel.find().sort({disable:1}).populate('image').populate('category');
     res.json({ size: centers.length, result: centers });
   } catch (error) {
     res.json({error : error.message});
@@ -307,6 +248,35 @@ router.get("/gettopvus/:limit", async (req, res, next) => {
   }
 });
 
+router.get("/search", async (req, res, next) => {
+  try {
+    
+    const searchQuery = req.query.search || ''; // Search query (default: empty string)
+    
+
+
+    let query = centerModel.find({disable:false});
+
+    // Search query
+    if (searchQuery) {
+      query = query.and({ title: { $regex: searchQuery, $options: "i" } });
+    }
+
+    // Sorting options
+    let sortOption = { updatedAt: 1 };
+    query = query.sort(sortOption);
+
+    const centers = await query
+      .populate('image')
+      .populate('category')
+      .exec();
+
+    res.json({ totalCenters: centers.length , centers });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
 /**
  * @swagger
  * /center/page:
@@ -332,23 +302,112 @@ router.get("/gettopvus/:limit", async (req, res, next) => {
  */
 router.get("/page", async (req, res, next) => {
   try {
+    
     const page = parseInt(req.query.page) || 1; // Current page (default: 1)
     const pageSize = parseInt(req.query.pageSize) || 10; // Page size (default: 10)
+    const sortBy = req.query.sortBy || 'updatedAt'; // Sort by (default: updatedAt)
+    const sortOrder = req.query.sortOrder || 'asc'; // Sort order (default: asc)
+    const searchQuery = req.query.search || ''; // Search query (default: empty string)
+    
 
     const totalCenters = await centerModel.countDocuments();
     const totalPages = Math.ceil(totalCenters / pageSize);
 
-    const centers = await centerModel
-      .find()
+    let query = centerModel.find();
+
+    // Search query
+    if (searchQuery) {
+      query = query.or([
+        { title: { $regex: searchQuery, $options: "i" } },
+        { description: { $regex: searchQuery, $options: "i" } },
+        { location: { $regex: searchQuery, $options: "i" } },
+        { phone: { $regex: searchQuery, $options: "i" } },
+        { email: { $regex: searchQuery, $options: "i" } },
+      ]);
+    }
+
+    // Sorting options
+    let sortOption = {};
+    if (sortBy === 'createdAt') {
+      sortOption = { createdAt: sortOrder === 'desc' ? -1 : 1 };
+    } else if (sortBy === 'updatedAt') {
+      sortOption = { updatedAt: sortOrder === 'desc' ? -1 : 1 };
+    } else if (sortBy === 'nbVus') {
+      sortOption = { nbVus: sortOrder === 'desc' ? -1 : 1 };
+    } else if (sortBy === 'title') {
+      sortOption = { title: sortOrder === 'desc' ? -1 : 1 };
+    }
+
+    query = query.sort(sortOption);
+
+    const centers = await query
       .skip((page - 1) * pageSize)
       .limit(pageSize)
+      .populate('image')
+      .populate('category')
       .exec();
 
-    res.json({ centers, totalPages, currentPage: page });
+    res.json({ totalPages, currentPage: page, totalCenters: centers.length , centers });
   } catch (error) {
     res.json({ error: error.message });
   }
 });
+
+
+
+router.get("/getbydistance/:distance", async (req, res, next) => {
+  try {
+    const { distance } = req.params;
+    const centers = await centerModel.find({disable:false}).populate('image').populate('category');
+    let distance_centers =[];
+    if(centers){
+      const address ='Avenue Mustapha Hjeij, 131 47 km) 1002, Ariana 1002 , TN';
+      await opencage
+      .geocode({ q: address })
+      .then((data) => {
+        if (data.status.code === 200 && data.results.length > 0) {
+          const place = data.results[0];
+          console.log(place.geometry);
+          centers.forEach( async (center) => {
+            const distance = geolib.getDistance(
+              { latitude:place.geometry.lat, longitude: place.geometry.lng },
+              { latitude: center.altitude, longitude: center.longitude }
+            );
+            console.log({"distance":distance});
+            distance_centers.push({distance,center});
+         });
+        } else {
+          console.log('status', data.status.message);
+          console.log('total_results', data.total_results);
+        }
+      });
+      
+    }
+    res.json({ result: distance_centers });
+  } catch (error) {
+    throw new Error(error.message);
+  }
+});
+
+const sundMails = async (email , subject , text ) => {
+  try {
+    // Compose the email
+    const mailOptions = {
+      from: 'nassreddine.trigui@hotmail.com',
+      to: email,
+      subject: subject,
+      text: text,
+    };
+    console.log(mailOptions);
+    // Send the email
+    await transporter.sendMail(mailOptions);
+    console.log({ message: "Send mail to : "+email });
+
+  } catch (error) {
+    console.log({ error: "Erreur lors de l'envoi du mail" });
+    console.log(error.message);
+  }
+}
 
 module.exports = router;
 

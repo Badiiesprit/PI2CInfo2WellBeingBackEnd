@@ -23,6 +23,26 @@ const offerSchema = new mongoose.Schema({
     disable:{
         type:Boolean,
         default:false
+    },
+    clickCount: {
+        type: Number,
+        default: 0,
+    },
+    ratedBy: [
+        {
+          userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+          },
+          rating: {
+            type: Number,
+            required: true,
+          },
+        },
+      ],
+    averageRating:{
+        type: Number,
+        default: 0,
     }
 
 },{

@@ -1,4 +1,6 @@
 var express = require("express");
+const bodyParser = require('body-parser');
+
 const session = require('express-session'); // Add this line
 const passport = require('passport'); // Add this line
 const multer = require('multer');
@@ -20,7 +22,6 @@ const logoutRouter = require ("./routes/logout");
 const postRouter = require("./routes/post");
 const commentRouter = require("./routes/comment");
 const cors = require("cors");
-const multer = require("multer");
 const fileUpload = require("express-fileupload");
 const requestIp = require('request-ip');
 const swaggerJsdoc = require('swagger-jsdoc');
@@ -28,6 +29,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerAutogen = require('swagger-autogen')();
 var router = express.Router();
 var app = express();
+app.use(bodyParser.json());
 app.use(cors());
 // Swagger configuration options
 const options = {
@@ -80,13 +82,13 @@ app.use(session({
 // Set up passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
-add
+
 app.use("/", indexRouter);
 app.use("/category", filesUploads , categoryRouter);
 app.use("/center", filesUploads , centerRouter);
 app.use("/user", userRouter);
-app.use("/services", serviceRouter);
-app.use("/offers", offerRouter);
+app.use("/services", filesUploads,serviceRouter);
+app.use("/offers", filesUploads,offerRouter);
 app.use("/login", loginRouter);
 app.use("/image",imageRouter);
 app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
@@ -132,6 +134,7 @@ global.isEmptyObject = function (value) {
 //secretKey JWT Token
 global.secretKey = "kgnùfdjhnojgnfsjlnfmljkdfsgb66g5fg5fg5fgfgkdg6fg5fg";
 
+
 global.getImageFilePathById = (image) => {
   if (!image) {
     return null;
@@ -139,3 +142,13 @@ global.getImageFilePathById = (image) => {
   const imagePath = path.join(__dirname, 'uplods', image.filename);
   return imagePath;
 }
+
+// handling CORS
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", 
+             "http://localhost:4200");
+  res.header("Access-Control-Allow-Headers", 
+             "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+

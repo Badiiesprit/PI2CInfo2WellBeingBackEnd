@@ -11,8 +11,8 @@ const validate = async(req, res, next) => {
             const schema = yup.object().shape({
                 title: yup.string().required().min(3),
                 description: yup.string().required().min(100),
-                longitude:yup.number().min(100),
-                altitude:yup.number().min(100),
+                longitude:yup.number().min(0),
+                altitude:yup.number().min(0),
                 phone:yup.number().min(10000000).max(99999999),
                 location: yup.string().min(10),
                 email:yup.string().email()
@@ -27,10 +27,10 @@ const validate = async(req, res, next) => {
         }else{
             console.log("/center/update");
             const schema = yup.object().shape({
-                title: yup.string().min(3),
-                description: yup.string().min(100),
-                longitude:yup.number().min(100),
-                altitude:yup.number().min(100),
+                title: yup.string().required().min(3),
+                description: yup.string().required().min(100),
+                longitude:yup.number().min(0),
+                altitude:yup.number().min(0),
                 phone:yup.number().min(10000000).max(99999999),
                 location: yup.string().min(10),
                 email:yup.string().email()
