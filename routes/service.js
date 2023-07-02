@@ -5,10 +5,13 @@ const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
 const validateToken = require("../middlewares/validateToken");
 const qrCode = require("qrcode");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 
-router.post("/add",validate,validateToken,uploadAndSaveImage, async (req, res, next) => {
+
+router.post("/add",validate,uploadAndSaveImage, async (req, res, next) => {
   try {
+    console.log(req.body);
     const { name, description, phone, email, location,date } = req.body;
 
     const checkIfServiecExist = await serviceModel.findOne({ name });
@@ -33,11 +36,14 @@ router.post("/add",validate,validateToken,uploadAndSaveImage, async (req, res, n
       serviceData.image = req.body.imageIds[0];
     }
     const service = new serviceModel(serviceData);
+    service._id = new mongoose.Types.ObjectId();
     const savedService = await service.save();
     res.json({ result: savedService });
     
   } catch (error) {
-    res.json(error.message);
+    // res.json(error.message);
+    console.log(error.message);
+
   }
 });
 
@@ -53,7 +59,8 @@ router.get("/get/:id", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const services = await serviceModel.find();
+    const services = await serviceModel.find().populate('image');
+    // services.image = await imageModel.findById(services.image);
     res.json({ services });
   } catch (error) {
     res.json(error.message);
@@ -70,9 +77,10 @@ router.get("/delete/:id", async (req, res, next) => {
   }
 });
 
-router.post("/update/:id",validateToken,validate,uploadAndSaveImage, async (req, res, next) => {
+router.post("/update/:id",validate,uploadAndSaveImage, async (req, res, next) => {
   try {
     const { id } = req.params;
+    console.log(id);
     const { name, description, phone, email, location,date } = req.body;
 
     const checkIfServiecExist = await serviceModel.findOne({ name });
@@ -173,7 +181,7 @@ router.post("/sort", async (req, res, next) => {
 router.get("/page", async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1; 
-    const pageSize = parseInt(req.query.pageSize) || 10; 
+    const pageSize = parseInt(req.query.pageSize) || 5; 
 
     const totalServices = await serviceModel.countDocuments();
     const totalPages = Math.ceil(totalServices / pageSize);
@@ -277,7 +285,22 @@ router.get("/statistics", async (req, res) => {
   }
 });
 
-
+router.get("/enable-disable/:id", async (req, res) => {
+  const serviceId = req.params.id;
+  
+  try {
+    const service = await serviceModel.findById(serviceId);
+    if (service) {
+      service.disable = !service.disable;
+      await service.save();
+      res.json({ disable:service.disable });
+    } else {
+      res.json({ error: "service not found" });
+    }
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
 
 
 

@@ -1,4 +1,6 @@
 var express = require("express");
+const bodyParser = require('body-parser');
+
 const session = require('express-session'); // Add this line
 const passport = require('passport'); // Add this line
 const multer = require('multer');
@@ -27,6 +29,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerAutogen = require('swagger-autogen')();
 var router = express.Router();
 var app = express();
+app.use(bodyParser.json());
 app.use(cors());
 // Swagger configuration options
 const options = {
@@ -79,7 +82,7 @@ app.use(session({
 // Set up passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
-add
+
 app.use("/", indexRouter);
 app.use("/category", filesUploads , categoryRouter);
 app.use("/center", filesUploads , centerRouter);
@@ -139,4 +142,13 @@ global.getImageFilePathById = (image) => {
   const imagePath = path.join(__dirname, 'uplods', image.filename);
   return imagePath;
 }
+
+// handling CORS
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", 
+             "http://localhost:4200");
+  res.header("Access-Control-Allow-Headers", 
+             "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 

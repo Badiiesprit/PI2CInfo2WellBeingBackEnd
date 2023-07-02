@@ -1,3 +1,4 @@
+
 var express = require("express");
 const userModel = require("../models/user");
 const jwt = require('jsonwebtoken');
@@ -18,15 +19,16 @@ router.post("/", async (req, res, next) => {
           role: user.role, 
         };
         const options = {
-          expiresIn: '99999999h', 
           expiresIn: '999999h', 
-           main
         };
         const token = jwt.sign(payload, secretKey, options);
         const tokens = user.tokens;
         tokens.push(token);
-        await userModel.findByIdAndUpdate(user._id,{tokens});
-        return res.json({ token });
+        user.loginCount++;
+        await userModel.findByIdAndUpdate(user._id,{tokens,loginCount:user.loginCount});
+        
+        return res.json({message:"login successful", token });
+
       } else {
         return res.status(401).json({ error: "mot de passe invalide" });
       }

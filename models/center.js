@@ -36,10 +36,10 @@ const centerSchema = new mongoose.Schema ({
         type:String,
         trim:true
     },
-    category:[{
+    category:{
         type : mongoose.Types.ObjectId, 
         ref :"category"
-    }],
+    },
     nbVus:{
         type:Number,
         default:0
