@@ -1,5 +1,5 @@
 # Ignore build artifacts
-uplods/
+public/uplods/
 views/
 
 # Ignore dependencies
