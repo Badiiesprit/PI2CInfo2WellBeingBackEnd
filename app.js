@@ -18,6 +18,7 @@ const loginRouter = require("./routes/login");
 const forgotPasswordEmailRouter = require("./routes/forgotPasswordEmail");
 const forgotPasswordSmsRouter = require("./routes/forgotPasswordSms");
 const loginFacebookRouter = require("./routes/loginFacebook");
+const connectGoogleRouter = require("./routes/connectGoogle");
 const logoutRouter = require ("./routes/logout");
 const postRouter = require("./routes/post");
 const commentRouter = require("./routes/comment");
@@ -94,6 +95,7 @@ app.use("/image",imageRouter);
 app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms", forgotPasswordSmsRouter);
 app.use("/loginFacebook", loginFacebookRouter);
+app.use("/connectGoogle", connectGoogleRouter)
 app.use("/logout", logoutRouter)
 app.use("/posts",postRouter);
 app.use("/comments",commentRouter);

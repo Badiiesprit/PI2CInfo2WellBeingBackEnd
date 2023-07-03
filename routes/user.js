@@ -13,6 +13,7 @@ router.get("/",validateToken, function (req, res, next) {
   res.json("welcome to TuniVita");
 });
 
+
 router.get("/get", validateToken ,async (req, res, next) => {
   try {
       const users = await userModel.find();
@@ -22,6 +23,7 @@ router.get("/get", validateToken ,async (req, res, next) => {
     res.json(error.message);
   }
 });
+
 
 router.get("/get/:id", async (req, res, next) => {
   try {
@@ -33,6 +35,8 @@ router.get("/get/:id", async (req, res, next) => {
     res.json({ error: error.message });
   }
 });
+
+
 router.put("/update/:id", validateToken, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -53,54 +57,6 @@ router.put("/update/:id", validateToken, async (req, res, next) => {
   }
 });
 
-// router.post("/update/:id", validateToken, async (req, res, next) => {
-//   try {
-//     const { id } = req.params;
-//     const { email } = req.body;
-//     console.log(req.body);
-    
-//     let user = await userModel.findById(id);
-    
-//     if (user.email != email) {
-//       const checkIfUserExist = await userModel.find({ email });
-//       if (!isEmptyObject(checkIfUserExist)) {
-//         throw new Error("User already exists!");
-//       }
-//     }
-    
-//     await userModel.findByIdAndUpdate(id, req.body);
-    
-//     user = await userModel.findById(id); // Fetch the updated user again
-    
-//     if (!user.role.includes("admin")) {
-//       await userModel.findByIdAndUpdate(id, { role: ["user"] });
-//       user.role = ["user"]; // Update the role in the user object as well
-//     }
-    
-//     console.log(user);
-//     res.json(user);
-//   } catch (error) {
-//     res.json(error.message);
-//   }
-// });
-// router.get("/get", validateToken, async (req, res, next) => {
-//   try {
-//     const role = req.user.role;
-//     let users;
-    
-//     if (role === "admin") {
-//       users = await userModel.find();
-//     } else if (role === "user") {
-//       users = await userModel.findById(req.user.id);
-//     } else {
-//       throw new Error("Invalid user role");
-//     }
-
-//     res.json(users);
-//   } catch (error) {
-//     res.json(error.message);
-//   }
-// });
 
 router.post("/addUser",validateUser, async (req, res, next) => {
     
@@ -134,6 +90,7 @@ router.post("/addUser",validateUser, async (req, res, next) => {
   }
 });
 
+
 router.delete("/delete/:id",validateToken, async (req, res, next) => {
     try {
       const { id } = req.params;
@@ -144,7 +101,6 @@ router.delete("/delete/:id",validateToken, async (req, res, next) => {
       res.json(error.message);
     }
   });
-
 
   router.get("/enable-disable/:id", async (req, res) => {
     const userId = req.params.id;
@@ -163,35 +119,6 @@ router.delete("/delete/:id",validateToken, async (req, res, next) => {
     }
   });
   
-
-
-
-
-  // router.put('/enable/:userId', (req, res) => {
-  //   const userId = req.params.userId;
-  
-  //   User.findById(userId, (err, user) => {
-  //     if (err) {
-  //       console.error('Error finding user:', err);
-  //       return res.status(500).json({ message: 'Error finding user' });
-  //     }
-  
-  //     if (!user) {
-  //       return res.status(404).json({ message: 'User not found' });
-  //     }
-  
-  //     user.disabled = false; 
-  
-  //     user.save((err, updatedUser) => {
-  //       if (err) {
-  //         console.error('Error enabling user:', err);
-  //         return res.status(500).json({ message: 'Error enabling user' });
-  //       }
-  
-  //       return res.status(200).json({ message: 'User enabled successfully', user: updatedUser });
-  //     });
-  //   });
-  // });
 
   router.post("/update/:id",validateToken, async (req, res, next) => {
     try {
