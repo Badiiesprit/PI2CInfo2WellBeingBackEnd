@@ -10,7 +10,8 @@ const validate = require("../middlewares/validateCenter");
 const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
 const axios = require('axios');
 const user = require('../models/user');
-
+const ejs = require('ejs');
+const path = require('path');
 var router = express.Router();
 
 /**
@@ -53,12 +54,27 @@ router.post("/add", validateToken , validate , uploadAndSaveImage , async (req, 
       }
       const center = new centerModel(categoryData);
       center.save();
-      // const users = userModel.find({disable:false});
-      // (await users).forEach(user => {
-      //   setTimeout(() => {
-      //     sundMails(user.email,"Add new Center","Add new Center");
-      //   }, 5000);
-      // }); 
+      const users = userModel.find({disable:true});
+      (await users).forEach((user,i) => {
+        setTimeout(() => {
+          ejs.renderFile(path.join(__dirname, 'modele_mails', 'maile_add_centers.ejs'), { 
+            username: user.firstname , 
+            centrename: categoryData.title ,
+            centreurl: "http://localhost:4200/center/"+center._id
+          }, async(err, data) => {
+            if (err) {
+              console.log(err);
+            } else {
+              sundMails(
+                user.email,
+                "Découvrez notre tout nouveau centre de loisirs !",
+                data
+              );
+            }
+          });
+          
+        }, 1000 * (i+1));
+      }); 
       
       res.json({ result: center });
     } catch (error) {
@@ -389,14 +405,14 @@ router.get("/getbydistance/:distance", async (req, res, next) => {
   }
 });
 
-const sundMails = async (email , subject , text ) => {
+const sundMails = async (email , subject , html ) => {
   try {
     // Compose the email
     const mailOptions = {
       from: 'nassreddine.trigui@hotmail.com',
       to: email,
       subject: subject,
-      text: text,
+      html: html,
     };
     console.log(mailOptions);
     // Send the email
