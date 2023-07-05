@@ -24,6 +24,10 @@ const postRouter = require("./routes/post");
 const commentRouter = require("./routes/comment");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
+const upload = multer();
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const app = express();
 const requestIp = require('request-ip');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -91,6 +95,10 @@ app.use("/user", userRouter);
 app.use("/services", filesUploads,serviceRouter);
 app.use("/offers", filesUploads,offerRouter);
 app.use("/login", loginRouter);
+app.use("/forgotPasswordEmail",forgotPasswordEmailRouter);
+app.use("/forgotPasswordSms",forgotPasswordSmsRouter);
+app.use("/pdf", postRouter);
+app.use("/posts",filesUploads,postRouter);
 app.use("/image",imageRouter);
 app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms", forgotPasswordSmsRouter);
@@ -110,7 +118,7 @@ app.use(function (req, res, next) {
 
 
 const server = http.createServer(app);
-server.listen(5050, () => {
+server.listen(5040, () => {
   console.log("app is running on port 5050");
 });
 
