@@ -1,81 +1,101 @@
 const express = require('express');
-const userModel = require('../models/user');
-const nodemailer = require('nodemailer');
-const bcrypt = require('bcrypt');
 const router = express.Router();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+const userModel = require('../models/user');
 
-// Set up nodemailer transporter for sending emails
+
 const transporter = nodemailer.createTransport({
-  service: 'hotmail',
+  host: 'smtp-mail.outlook.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
-    user: 'nassreddine.trigui@hotmail.com', // Your Hotmail.com email address
-    pass: 'Nass..1989' // Your Hotmail.com password
-  }
+    // TODO: replace `user` and `pass` values from <https://forwardemail.net>
+    user: 'nassreddine.trigui@hotmail.com',
+    pass: 'Nass..1989',
+}
 });
 
-// Function to generate a random validation code
-function generateValidationCode() {
-  const codeLength = 6;
-  const characters = '0123456789';
-  let code = '';
-  for (let i = 0; i < codeLength; i++) {
-    code += characters[Math.floor(Math.random() * characters.length)];
-  }
-  return code;
-}
 
-router.post('/', async (req, res, next) => {
+// Route pour la demande de réinitialisation du mot de passe
+router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
+
   try {
+    // Vérifier si l'utilisateur existe dans la base de données
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: "Email not found" });
+      return res.status(404).json({ message: 'Utilisateur non trouvé.' });
     }
 
-    // Generate a validation code
-    const validationCode = generateValidationCode();
+    // Générer un token de réinitialisation de mot de passe
+    const token = jwt.sign({ userId: user._id }, 'my_super_secret_key_12345', {
+      expiresIn: '1h',
+    });
 
-    // Set the reset token and expiration in the user document
-    user.resetToken = validationCode;
-    user.resetTokenExpiration = Date.now() + 3600000; // One hour validity
+    // Enregistrer le token dans la base de données pour l'utilisateur
+    user.resetPasswordToken = token;
     await user.save();
 
-    // Compose the email
+    // Envoyer l'e-mail contenant le lien de réinitialisation du mot de passe
+    const resetPasswordLink = `http://localhost:4200/reset-password/${token}`;
+    // Utilisez le module nodemailer pour envoyer l'e-mail avec le lien
+
     const mailOptions = {
-      from: 'nassreddine.trigui@hotmail.com',
-      to: email,
+      from: '"Tunivita" nassreddine.trigui@hotmail.com',
+      to: user.email,
       subject: 'Password Reset',
-      text: `Use this validation code to reset your password: ${validationCode}`,
+      text: `Click on the following link to reset your password: ${resetPasswordLink}`
     };
+    
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'An error occurred while sending the password reset email.' });
+      } else {
+        console.log('Email sent: ' + info.response);
+        res.status(200).json({ message: 'An email has been sent to reset your password.' });
+      }
+    });
+    
 
-    // Send the email
-    await transporter.sendMail(mailOptions);
-
-    return res.json({ message: "Validation code sent to your email" });
+    res.status(200).json({ message: 'Un e-mail a été envoyé pour réinitialiser votre mot de passe.' });
   } catch (error) {
-    return res.status(500).json({ error: "Error sending validation code" });
+    console.error(error);
+    res.status(500).json({ message: 'Une erreur s\'est produite lors de la réinitialisation du mot de passe.' });
   }
 });
 
-router.post('/verify', async (req, res, next) => {
-  const { email, validationCode, newPassword } = req.body;
+// Route pour réinitialiser le mot de passe
+router.post('/reset-password/:token', async (req, res) => {
+  const { token } = req.params;
+
   try {
-    const user = await userModel.findOne({ email });
-    if (!user || !user.resetToken || user.resetToken !== validationCode || !user.resetTokenExpiration || user.resetTokenExpiration < Date.now()) {
-      return res.status(400).json({ error: "Invalid or expired validation code" });
+    // Vérifier si le token est valide et trouver l'utilisateur correspondant
+    const user = await userModel.findOne({ resetPasswordToken: token });
+    if (!user) {
+      return res.status(400).json({ message: 'Token de réinitialisation de mot de passe invalide.' });
     }
 
-    // Reset token is valid, proceed with password update
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Vérifier si le token a expiré
+    const decodedToken = jwt.verify(token, 'my_super_secret_key_12345');
+    if (decodedToken.exp < Date.now() / 1000) {
+      return res.status(400).json({ message: 'Le token de réinitialisation de mot de passe a expiré.' });
+    }
+    const { password } = req.body;
+    // Mettre à jour le mot de passe de l'utilisateur
+    const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpiration = undefined;
+    user.resetPasswordToken = undefined;
     await user.save();
-
-    return res.status(200).json({ message: "Password reset successfully" });
+    res.status(200).json({ message: 'Votre mot de passe a été réinitialisé avec succès.' });
   } catch (error) {
-    return res.status(500).json({ error: "Error resetting password" });
+    console.error(error);
+    res.status(500).json({ message: 'Une erreur s\'est produite lors de la réinitialisation du mot de passe.' });
   }
 });
+
+
 
 module.exports = router;

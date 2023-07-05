@@ -4,18 +4,26 @@ const serviceSchema = new mongoose.Schema({
     
     name:{
         type:String,
+        trim:true,
         required:true,
-        trim:true
+
     },
+    
     description:{
         type:String,
-        required:true,
         trim:true
     },
+    
+    date:{
+        type:Date,
+        trim:true
+    },
+    
     image:{
         type : mongoose.Types.ObjectId, 
         ref :"image"
     },
+    
     phone:{
         type:String,
         trim:true
@@ -32,7 +40,30 @@ const serviceSchema = new mongoose.Schema({
     disable:{
         type:Boolean,
         default:false
-    }
+    },
+    qrCode: {
+        type: String,
+    },
+    clickStatistics: [
+        {
+          date: {
+            type: Date,
+            required: true
+          },
+          count: {
+            type: Number,
+            default: 0
+          },
+          clickedDates: [
+            {
+              type: Date
+            }
+          ]
+        }
+      ]
+   
+
+
 },{
     timestamps: true
 });

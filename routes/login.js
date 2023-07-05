@@ -19,10 +19,16 @@ router.post("/", async (req, res, next) => {
           role: user.role, 
         };
         const options = {
-          expiresIn: '99999999h', 
+          expiresIn: '999999h', 
         };
         const token = jwt.sign(payload, secretKey, options);
-        return res.json({ token });
+        const tokens = user.tokens;
+        tokens.push(token);
+        user.loginCount++;
+        await userModel.findByIdAndUpdate(user._id,{tokens,loginCount:user.loginCount});
+        
+        return res.json({message:"login successful", token });
+
       } else {
         return res.status(401).json({ error: "mot de passe invalide" });
       }

@@ -8,7 +8,8 @@ const validate = async(req, res, next) => {
         description: yup.string().required(),
         phone:yup.number().min(10000000).max(99999999),
         email:yup.string().email(),
-        location:yup.string().required(),
+        location: yup.string().required(),
+
     });
     await schema.validate(req.body);
     next();

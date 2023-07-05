@@ -1,33 +1,49 @@
 const express = require("express");
 const serviceModel = require("../models/service");
 const validate = require("../middlewares/validateService");
+const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
+const validateToken = require("../middlewares/validateToken");
+const qrCode = require("qrcode");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 
 
-router.post("/add",validate, async (req, res, next) => {
+router.post("/add",validate,uploadAndSaveImage, async (req, res, next) => {
   try {
-    const { name, description, image, phone, email, location,date } = req.body;
+    console.log(req.body);
+    const { name, description, phone, email, location,date } = req.body;
 
-    const checkIfOfferExist = await serviceModel.findOne({ name });
-    if (checkIfOfferExist) {
+    const checkIfServiecExist = await serviceModel.findOne({ name });
+    if (checkIfServiecExist) {
       throw new Error("Service already exist!");
     }
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+    const qrCodeDataUrl = await generateQRCode(googleMapsUrl);
 
-    const service = new serviceModel({
-      name: name,
-      description: description,
-      location: location,
-      image: image,
-      phone: phone,
-      email: email,
-      date:date,
-    });
+    const serviceData ={
+      name,
+      description,
+      location,
+      phone,
+      email,
+      date,
+      qrCode:qrCodeDataUrl,
 
-    service.save();
-    res.json("Service Added");
+    };
+
+    if (req.body.imageIds) {
+      serviceData.image = req.body.imageIds[0];
+    }
+    const service = new serviceModel(serviceData);
+    service._id = new mongoose.Types.ObjectId();
+    const savedService = await service.save();
+    res.json({ result: savedService });
+    
   } catch (error) {
-    res.json(error.message);
+    // res.json(error.message);
+    console.log(error.message);
+
   }
 });
 
@@ -43,7 +59,8 @@ router.get("/get/:id", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const services = await serviceModel.find();
+    const services = await serviceModel.find().populate('image');
+    // services.image = await imageModel.findById(services.image);
     res.json({ services });
   } catch (error) {
     res.json(error.message);
@@ -60,14 +77,34 @@ router.get("/delete/:id", async (req, res, next) => {
   }
 });
 
-router.post("/update/:id",validate, async (req, res, next) => {
+router.post("/update/:id",validate,uploadAndSaveImage, async (req, res, next) => {
   try {
     const { id } = req.params;
-    await serviceModel.findByIdAndUpdate(id,req.body);
-    const service = await serviceModel.findById(id);
-    res.json({ service });
+    console.log(id);
+    const { name, description, phone, email, location,date } = req.body;
+
+    const checkIfServiecExist = await serviceModel.findOne({ name });
+    if (checkIfServiecExist) {
+      throw new Error("Service already exist!");
+    }
+
+    const serviceData ={
+      name,
+      description,
+      location,
+      phone,
+      email,
+      date,
+    };
+    if (req.body.imageIds) {
+      serviceData.image = req.body.imageIds[0];
+    }
+    await serviceModel.findByIdAndUpdate(id,serviceData);
+    const serviceView = await serviceModel.findById(id);
+    res.json({ serviceView });
   } catch (error) {
     res.json(error.message);
+    
   }
 });
 
@@ -143,8 +180,8 @@ router.post("/sort", async (req, res, next) => {
 
 router.get("/page", async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Current page (default: 1)
-    const pageSize = parseInt(req.query.pageSize) || 10; // Page size (default: 10)
+    const page = parseInt(req.query.page) || 1; 
+    const pageSize = parseInt(req.query.pageSize) || 5; 
 
     const totalServices = await serviceModel.countDocuments();
     const totalPages = Math.ceil(totalServices / pageSize);
@@ -160,5 +197,111 @@ router.get("/page", async (req, res, next) => {
     res.json({ error: error.message });
   }
 });
+
+const generateQRCode = async (data) => {
+  try {
+    const qrCodeDataUrl = await qrCode.toDataURL(data);
+    return qrCodeDataUrl;
+  } catch (error) {
+    throw new Error("Failed to generate QR code");
+  }
+};
+
+
+router.post("/click/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const service = await serviceModel.findById(id);
+    if (!service) {
+      throw new Error("Service not found!");
+    }
+
+    const clickedAt = new Date();
+    const today = new Date().setUTCHours(0, 0, 0, 0);
+
+    if (!service.clickStatistics) {
+      service.clickStatistics = [];
+    }
+
+    const clickStatsToday = service.clickStatistics.find(stat => stat.date && stat.date.getTime() === today);
+    if (clickStatsToday) {
+      clickStatsToday.count++;
+      clickStatsToday.clickedDates.push(clickedAt);
+
+    } else {
+      const newClickStats = {
+        date: new Date(today),
+        count: 1,
+        clickedDates: [clickedAt]
+      };
+      service.clickStatistics.push(newClickStats);
+    }
+
+    await service.save({ strict: false }); 
+
+    res.json({ message: "Service click recorded successfully.", clickStatistics: service.clickStatistics });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+
+
+router.get("/statistics", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    console.log(req.body);
+
+    const statistics = await serviceModel.aggregate([
+      {
+        $match: {
+          "clickStatistics.date": { $gte: start, $lte: end }
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          clickCount: {
+            $sum: "$clickStatistics.count"
+          }
+        }
+      },
+      {
+        $sort: {
+          clickCount: -1
+        }
+      },
+      {
+        $limit: 2
+      }
+    ]);
+
+    res.json({ statistics });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+router.get("/enable-disable/:id", async (req, res) => {
+  const serviceId = req.params.id;
+  
+  try {
+    const service = await serviceModel.findById(serviceId);
+    if (service) {
+      service.disable = !service.disable;
+      await service.save();
+      res.json({ disable:service.disable });
+    } else {
+      res.json({ error: "service not found" });
+    }
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+
 
 module.exports = router;
