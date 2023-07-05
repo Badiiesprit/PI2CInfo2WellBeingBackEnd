@@ -95,7 +95,7 @@ app.use("/forgotPasswordEmail", forgotPasswordEmailRouter);
 app.use("/forgotPasswordSms", forgotPasswordSmsRouter);
 app.use("/loginFacebook", loginFacebookRouter);
 app.use("/logout", logoutRouter)
-app.use("/posts",postRouter);
+app.use("/posts",filesUploads,postRouter);
 app.use("/comments",commentRouter);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(upload.array());

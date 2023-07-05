@@ -1,39 +1,51 @@
-var express = require('express');
 const postModel = require("../models/post");
 const validateToken = require("../middlewares/validateToken");
-const userModel = require("../models/user");
-
-
+const uploadAndSaveImage = require("../middlewares/uploadAndSaveImage");
+const express = require("express");
+const mongoose = require("mongoose");
 var router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.json("welcome to post");
+
+router.get("/", async (req, res, next) => {
+  try {
+    const posts = await postModel.find().populate('image');
+    res.json({ posts });
+  } catch (error) {
+    res.json(error.message);
+  }
 });
 
-router.post("/add",async (req, res, next) => {
-    
-    try {
-      const {title , description , short_description} = req.body;
-      const checkIfpostExist = await postModel.findOne({ title });
-      if (checkIfpostExist) {
-        throw new Error("post  already exist!");
-      }
-     
-      
-      const post = new postModel({
-        title: title,
-        description: description,
-        short_description,
-      });
+router.post("/add",uploadAndSaveImage, async (req, res, next) => {
+  try {
+    console.log(req.body);
+    const {title , description , short_description} = req.body;
 
-      post.save();
-      res.json(post);
-    } catch (error) {
-      res.json(error.message);
+    const checkIfpostExist = await postModel.findOne({ title });
+    if (checkIfpostExist) {
+      throw new Error("post  already exist!");
     }
+    const postData ={
+      title: title,
+      description: description,
+      short_description,
+    };
+    if (req.body.imageIds) {
+      postData.image = req.body.imageIds[0];
+    }
+    const post = new postModel(postData);
+    post._id = new mongoose.Types.ObjectId();
+    const savedPost = await post.save();
+    res.json({ result: savedPost });
+    
+  } catch (error) {
+    // res.json(error.message);
+    console.log(error.message);
   }
-);
+});
+
+
+
+
 
 router.get("/delete/:id", async (req, res, next) => {
   try {
@@ -48,41 +60,42 @@ router.get("/delete/:id", async (req, res, next) => {
 router.get("/get/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const post = await postModel.findById(id);
+    const post = await postModel.findById(id).populate('image');;
     res.json(post);
   } catch (error) {
     res.json(error.message);
   }
 });
 
-router.post("/update/:id", async (req, res, next) => {
+router.post("/update/:id",uploadAndSaveImage,async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { title } = req.body;
-    var post = await postModel.findById(id);
-    console.log(post);
-    console.log(title);
-    if(post.title!=title){
-      const checkIfpostExist = await postModel.find({ title });
-      if (!(checkIfpostExist)) {
-        throw new Error("post already exist!");
-      }
+    console.log(id);
+    const {title , description , short_description} = req.body;
+
+    const checkIfpostExist = await postModel.findOne({ title });
+    if (checkIfpostExist) {
+      throw new Error("post  already exist!");
     }
-    await postModel.findByIdAndUpdate(id, req.body);
-    post = await postModel.findById(id);
-    res.json(post);
+    const postData ={
+      title: title,
+      description: description,
+      short_description,
+    };
+
+    if (req.body.imageIds) {
+      postData.image = req.body.imageIds[0];
+    }
+    await postModel.findByIdAndUpdate(id,postData);
+    const postView = await postModel.findById(id);
+    res.json({ postView });
   } catch (error) {
     res.json(error.message);
+    
   }
 });
-router.get("/get", async (req, res, next) => {
-  try {
-    const posts = await postModel.find();
-    res.json(posts);
-  } catch (error) {
-    res.json(error.message);
-  }
-});
+
+
 
 router.post("/search", async (req, res, next) => {
   try {
@@ -153,6 +166,24 @@ router.post('/dislike/:id',validateToken, async (req, res) => {
     await post.save();
 
     res.json({ message: 'Publication dislikée avec succès' });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+
+router.get("/enable-disable/:id", async (req, res) => {
+  const postId = req.params.id;
+  
+  try {
+    const post = await postModel.findById(postId);
+    if (post) {
+      post.disable = !post.disable;
+      await post.save();
+      res.json({ disable:post.disable });
+    } else {
+      res.json({ error: "post not found" });
+    }
   } catch (error) {
     res.json({ error: error.message });
   }

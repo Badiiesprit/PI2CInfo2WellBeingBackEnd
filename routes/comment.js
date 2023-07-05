@@ -12,20 +12,21 @@ router.get('/', function(req, res, next) {
   res.json("welcome to comment");
 });
 
-router.post(
-  "/add",
-  async (req, res, next) => {
-    
+
+
+
+
+router.post("/add",async (req, res, next) => {    
     try {
-      const {text,post} = req.body;
-      var post_comment = await postModel.findById(post);
-      if (!post_comment) {
-        throw new Error("post does not exist!");
-      }
-        
+      const userId = req.body.currentUser;
+      const postId = req.params;
+      const user = await userModel.findById(userId);
+      var post = await postModel.findById(postId);
+      const {text} = req.body;
       const comment = new commentModel({
         text: text,
         post: post,
+        user:user,
       });
 
       comment.save();
@@ -70,7 +71,7 @@ router.post("/update/:id", async (req, res, next) => {
     res.json(error.message);
   }
 });
-router.get("/get", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const comments = await commentModel.find();
     res.json(comments);

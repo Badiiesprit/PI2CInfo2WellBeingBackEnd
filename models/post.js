@@ -22,6 +22,12 @@ const postSchema = new mongoose.Schema({
         type : mongoose.Types.ObjectId, 
         ref :"image"
     }],
+    
+    disable:{
+      type:Boolean,
+      default:false
+    },
+
     likes: {
         type: Number,
         default: 0
